@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SpamGuard Lite</string>
+    <string name="destination_call_log">Cuộc gọi</string>
+    <string name="destination_blocklist">Danh sách chặn</string>
+</resources>

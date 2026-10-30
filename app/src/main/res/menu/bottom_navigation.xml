@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- id của item phải trùng id destination trong nav_graph để NavigationUI điều hướng. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/callLogFragment"
+        android:icon="@drawable/ic_nav_call_log"
+        android:title="@string/destination_call_log" />
+    <item
+        android:id="@+id/blocklistFragment"
+        android:icon="@drawable/ic_nav_blocklist"
+        android:title="@string/destination_blocklist" />
+</menu>
