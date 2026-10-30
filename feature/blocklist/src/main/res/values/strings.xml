@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="blocklist_empty">Chưa có quy tắc chặn nào. Thêm số hoặc đầu số muốn chặn.</string>
+    <string name="blocklist_action_add_rule">Thêm quy tắc</string>
+
+    <string name="blocklist_match_exact">Chính xác</string>
+    <string name="blocklist_match_prefix">Theo đầu số</string>
+    <string name="blocklist_rule_details">%1$s · tạo ngày %2$s</string>
+    <string name="blocklist_delete_rule_description">Xóa quy tắc %1$s</string>
+
+    <string name="blocklist_add_title">Thêm quy tắc chặn</string>
+    <string name="blocklist_input_hint">Số điện thoại hoặc đầu số</string>
+    <string name="blocklist_match_prefix_option">Chặn mọi số bắt đầu bằng đầu số này</string>
+    <string name="blocklist_match_exact_option">Chỉ chặn đúng số này</string>
+    <string name="blocklist_action_add">Thêm</string>
+    <string name="blocklist_action_cancel">Hủy</string>
+
+    <string name="blocklist_delete_title">Xóa quy tắc?</string>
+    <string name="blocklist_delete_message">Các cuộc gọi khớp %1$s sẽ không còn bị đánh dấu spam.</string>
+    <string name="blocklist_action_delete">Xóa</string>
+
+    <string name="blocklist_message_added">Đã thêm quy tắc chặn.</string>
+    <string name="blocklist_message_duplicate">Quy tắc này đã có trong danh sách.</string>
+    <string name="blocklist_message_invalid">Số hoặc đầu số không hợp lệ.</string>
+    <string name="blocklist_message_deleted">Đã xóa quy tắc.</string>
+</resources>

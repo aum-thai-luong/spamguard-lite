@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="16dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/pattern_input_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/blocklist_input_hint">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/pattern_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAutofill="no"
+            android:inputType="phone"
+            android:maxLines="1" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <RadioGroup
+        android:id="@+id/match_type_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:checkedButton="@+id/match_prefix">
+
+        <RadioButton
+            android:id="@+id/match_prefix"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/blocklist_match_prefix_option" />
+
+        <RadioButton
+            android:id="@+id/match_exact"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/blocklist_match_exact_option" />
+
+    </RadioGroup>
+
+</LinearLayout>
