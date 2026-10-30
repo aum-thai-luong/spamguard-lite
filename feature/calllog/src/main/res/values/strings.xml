@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="call_log_permission_rationale">SpamGuard cần quyền đọc nhật ký cuộc gọi để đánh dấu các cuộc gọi spam.</string>
+    <string name="call_log_action_grant_permission">Cấp quyền</string>
+    <string name="call_log_empty">Chưa có cuộc gọi nào.</string>
+    <string name="call_log_error">Không đọc được nhật ký cuộc gọi.</string>
+    <string name="call_log_action_retry">Thử lại</string>
+    <string name="call_log_private_number">Số ẩn</string>
+    <string name="call_log_blocked_by">Bị chặn theo quy tắc %1$s</string>
+
+    <plurals name="call_log_blocked_summary">
+        <item quantity="one">%d cuộc gọi bị chặn</item>
+        <item quantity="other">%d cuộc gọi bị chặn</item>
+    </plurals>
+
+    <string name="call_log_type_incoming">Cuộc gọi đến</string>
+    <string name="call_log_type_outgoing">Cuộc gọi đi</string>
+    <string name="call_log_type_missed">Cuộc gọi nhỡ</string>
+    <string name="call_log_type_rejected">Cuộc gọi bị từ chối</string>
+    <string name="call_log_type_blocked">Cuộc gọi bị hệ thống chặn</string>
+    <string name="call_log_type_unknown">Cuộc gọi</string>
+</resources>
