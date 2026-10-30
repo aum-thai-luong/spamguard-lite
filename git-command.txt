@@ -1,0 +1,22 @@
+## Đổi tài khoản tạo commit:
+#0. Địa chỉ cấu hình
+
+git config --show-origin --get user.name
+
+#1. Kiểm tra cấu hình hiện tại
+
+git config user.name
+git config user.email
+git remote -v
+
+#2. Chọn tài khoản commit:
+
+git config --local user.name "Thai Luong"
+git config --local user.email "thai.luong@tp.com.vn"
+
+#3. Đổi tên user
+git config --local user.name "ThaiAUM"
+
+#4. Nếu chưa có remote, thêm bằng lệnh:
+git remote add origin <URL_REPOSITORY>
+git remote add origin https://github.com/aum-thai-luong/spamguard-lite.git
