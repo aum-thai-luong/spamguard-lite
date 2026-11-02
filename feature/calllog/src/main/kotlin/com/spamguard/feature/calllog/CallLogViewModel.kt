@@ -28,6 +28,7 @@ class CallLogViewModel @Inject constructor(
     fun onPermissionResult(granted: Boolean) {
         if (!granted) {
             _uiState.value = CallLogUiState.PermissionRequired
+            return
         }
         loadCalls()
     }
