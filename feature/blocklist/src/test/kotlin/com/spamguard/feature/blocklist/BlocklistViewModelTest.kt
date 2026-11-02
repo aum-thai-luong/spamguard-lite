@@ -109,6 +109,74 @@ class BlocklistViewModelTest {
         assertFalse(viewModel.uiState.value.isLoading)
     }
 
+    // --- Test đặc tả: chốt hành vi hiện tại trước khi chuyển UI sang Compose. ---
+
+    @Test
+    fun `rules are mapped with match type label and created date`() = runTest {
+        collectUiState()
+        repository.addRule("0900", MatchType.PREFIX)
+        repository.addRule("0987654321", MatchType.EXACT)
+
+        val rules = viewModel.uiState.value.rules
+
+        assertEquals(listOf(R.string.blocklist_match_prefix, R.string.blocklist_match_exact), rules.map { it.matchTypeLabelRes })
+        // FakeBlockRuleRepository tạo quy tắc với Instant.EPOCH; mapper dùng UTC.
+        assertEquals(listOf("01/01/1970", "01/01/1970"), rules.map { it.createdText })
+    }
+
+    @Test
+    fun `rules keep repository order`() = runTest {
+        collectUiState()
+        repository.addRule("0987654321", MatchType.EXACT)
+        repository.addRule("0900", MatchType.PREFIX)
+        repository.addRule("0123", MatchType.PREFIX)
+
+        assertEquals(listOf("0987654321", "0900", "0123"), viewModel.uiState.value.rules.map { it.pattern })
+    }
+
+    @Test
+    fun `same pattern with different match type is not a duplicate`() = runTest {
+        collectUiState()
+        viewModel.onAddRule("09001234", MatchType.PREFIX)
+
+        viewModel.onAddRule("09001234", MatchType.EXACT)
+
+        assertEquals(2, viewModel.uiState.value.rules.size)
+        assertEquals(R.string.blocklist_message_added, viewModel.uiState.value.userMessageRes)
+    }
+
+    @Test
+    fun `later message replaces earlier one`() = runTest {
+        collectUiState()
+        viewModel.onAddRule("abc", MatchType.EXACT)
+
+        viewModel.onAddRule("0900", MatchType.PREFIX)
+
+        assertEquals(R.string.blocklist_message_added, viewModel.uiState.value.userMessageRes)
+    }
+
+    @Test
+    fun `deleting unknown id still confirms deletion`() = runTest {
+        collectUiState()
+        repository.addRule("0900", MatchType.PREFIX)
+
+        viewModel.onDeleteRule(ruleId = 999)
+
+        assertEquals(listOf("0900"), viewModel.uiState.value.rules.map { it.pattern })
+        assertEquals(R.string.blocklist_message_deleted, viewModel.uiState.value.userMessageRes)
+    }
+
+    @Test
+    fun `rules added elsewhere appear without user action`() = runTest {
+        collectUiState()
+        assertTrue(viewModel.uiState.value.isEmpty)
+
+        repository.addRule("0900", MatchType.PREFIX)
+
+        assertEquals(listOf("0900"), viewModel.uiState.value.rules.map { it.pattern })
+        assertNull(viewModel.uiState.value.userMessageRes)
+    }
+
     /** `uiState` dùng WhileSubscribed nên cần một subscriber để upstream chạy. */
     private fun TestScope.collectUiState() {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect() }
