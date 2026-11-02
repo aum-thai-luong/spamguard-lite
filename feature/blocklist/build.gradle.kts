@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
@@ -17,6 +18,8 @@ android {
     }
 
     buildFeatures {
+        compose = true
+        // Dialog thêm quy tắc vẫn dùng layout XML.
         viewBinding = true
     }
 
@@ -43,6 +46,13 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.material)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
