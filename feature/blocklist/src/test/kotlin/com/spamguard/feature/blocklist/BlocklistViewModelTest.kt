@@ -30,12 +30,18 @@ class BlocklistViewModelTest {
     private val repository = FakeBlockRuleRepository()
     private val normalizer = PhoneNumberNormalizer()
 
-    private val viewModel = BlocklistViewModel(
-        observeBlockRules = ObserveBlockRulesUseCase(repository),
-        addBlockRule = AddBlockRuleUseCase(repository, normalizer),
-        removeBlockRule = RemoveBlockRuleUseCase(repository),
-        uiMapper = BlockRuleUiMapper(ZoneOffset.UTC),
-    )
+    /**
+     * Tạo trễ: constructor gọi `stateIn(viewModelScope)` nên phải chạy sau khi
+     * [MainDispatcherRule] đã `setMain`, nếu không scope giữ Main dispatcher thật (không có trên JVM).
+     */
+    private val viewModel by lazy {
+        BlocklistViewModel(
+            observeBlockRules = ObserveBlockRulesUseCase(repository),
+            addBlockRule = AddBlockRuleUseCase(repository, normalizer),
+            removeBlockRule = RemoveBlockRuleUseCase(repository),
+            uiMapper = BlockRuleUiMapper(ZoneOffset.UTC),
+        )
+    }
 
     @Test
     fun `starts loading until rules arrive`() {
