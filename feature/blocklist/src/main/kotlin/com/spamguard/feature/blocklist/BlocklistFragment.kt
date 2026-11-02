@@ -19,8 +19,6 @@ class BlocklistFragment : Fragment(R.layout.fragment_blocklist) {
 
     private val viewModel: BlocklistViewModel by viewModels()
 
-    private lateinit var pendingDeletion: BlockRuleUiModel
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentBlocklistBinding.bind(view)
@@ -37,8 +35,7 @@ class BlocklistFragment : Fragment(R.layout.fragment_blocklist) {
     }
 
     private fun confirmDeletion(rule: BlockRuleUiModel) {
-        pendingDeletion = rule
-        ConfirmDeleteRuleDialogFragment.newInstance(rule.pattern)
+        ConfirmDeleteRuleDialogFragment.newInstance(rule.id, rule.pattern)
             .show(childFragmentManager, ConfirmDeleteRuleDialogFragment.TAG)
     }
 
@@ -53,8 +50,8 @@ class BlocklistFragment : Fragment(R.layout.fragment_blocklist) {
         childFragmentManager.setFragmentResultListener(
             ConfirmDeleteRuleDialogFragment.REQUEST_KEY,
             viewLifecycleOwner,
-        ) { _, _ ->
-            viewModel.onDeleteRule(pendingDeletion.id)
+        ) { _, result ->
+            viewModel.onDeleteRule(ConfirmDeleteRuleDialogFragment.parseResult(result))
         }
     }
 
