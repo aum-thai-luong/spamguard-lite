@@ -1,16 +1,20 @@
 package com.spamguard.feature.calllog
 
 import com.spamguard.core.domain.error.CallLogUnavailableException
+import com.spamguard.core.domain.model.CallRecord
 import com.spamguard.core.domain.model.MatchType
 import com.spamguard.core.domain.phone.PhoneNumberNormalizer
+import com.spamguard.core.domain.repository.CallLogRepository
 import com.spamguard.core.domain.spam.SpamClassifier
 import com.spamguard.core.domain.usecase.GetClassifiedCallsUseCase
 import com.spamguard.core.testing.FakeBlockRuleRepository
 import com.spamguard.core.testing.FakeCallLogRepository
 import com.spamguard.core.testing.MainDispatcherRule
 import com.spamguard.core.testing.aCallRecord
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -24,14 +28,7 @@ class CallLogViewModelTest {
     private val callLogRepository = FakeCallLogRepository()
     private val blockRuleRepository = FakeBlockRuleRepository()
 
-    private val viewModel = CallLogViewModel(
-        getClassifiedCalls = GetClassifiedCallsUseCase(
-            callLogRepository = callLogRepository,
-            blockRuleRepository = blockRuleRepository,
-            classifier = SpamClassifier(PhoneNumberNormalizer()),
-        ),
-        uiMapper = CallUiMapper(ZoneOffset.UTC),
-    )
+    private val viewModel = createViewModel(callLogRepository)
 
     @Test
     fun `starts by asking for call log permission`() {
@@ -57,7 +54,7 @@ class CallLogViewModelTest {
     fun `granted permission with empty call log shows empty state`() {
         viewModel.onPermissionResult(granted = true)
 
-        assertEquals(CallLogUiState.Empty, viewModel.uiState.value)
+        assertEquals(CallLogUiState.Empty(), viewModel.uiState.value)
     }
 
     @Test
@@ -79,5 +76,88 @@ class CallLogViewModelTest {
         viewModel.onRetry()
 
         assertTrue(viewModel.uiState.value is CallLogUiState.Content)
+    }
+
+    @Test
+    fun `refresh reloads calls and clears refreshing flag`() {
+        callLogRepository.calls = listOf(aCallRecord(id = 1))
+        viewModel.onPermissionResult(granted = true)
+        callLogRepository.calls = listOf(aCallRecord(id = 2), aCallRecord(id = 1))
+
+        viewModel.onRefresh()
+
+        val state = viewModel.uiState.value as CallLogUiState.Content
+        assertEquals(listOf(2L, 1L), state.calls.map { it.id })
+        assertFalse(state.isRefreshing)
+    }
+
+    @Test
+    fun `refresh keeps current calls visible while reading`() {
+        val gatedRepository = GatedCallLogRepository(calls = listOf(aCallRecord(id = 1)))
+        val viewModel = createViewModel(gatedRepository)
+        viewModel.onPermissionResult(granted = true)
+        val gate = CompletableDeferred<Unit>()
+        gatedRepository.gate = gate
+
+        viewModel.onRefresh()
+
+        val refreshing = viewModel.uiState.value as CallLogUiState.Content
+        assertTrue(refreshing.isRefreshing)
+        assertEquals(listOf(1L), refreshing.calls.map { it.id })
+
+        gate.complete(Unit)
+
+        assertFalse((viewModel.uiState.value as CallLogUiState.Content).isRefreshing)
+    }
+
+    @Test
+    fun `refresh from empty state shows new calls`() {
+        viewModel.onPermissionResult(granted = true)
+        callLogRepository.calls = listOf(aCallRecord())
+
+        viewModel.onRefresh()
+
+        assertTrue(viewModel.uiState.value is CallLogUiState.Content)
+    }
+
+    @Test
+    fun `refresh failure shows error`() {
+        callLogRepository.calls = listOf(aCallRecord())
+        viewModel.onPermissionResult(granted = true)
+        callLogRepository.failure = CallLogUnavailableException("provider down")
+
+        viewModel.onRefresh()
+
+        assertEquals(CallLogUiState.Error, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `refresh is ignored before permission is granted`() {
+        callLogRepository.calls = listOf(aCallRecord())
+
+        viewModel.onRefresh()
+
+        assertEquals(CallLogUiState.PermissionRequired, viewModel.uiState.value)
+    }
+
+    private fun createViewModel(callLogRepository: CallLogRepository) = CallLogViewModel(
+        getClassifiedCalls = GetClassifiedCallsUseCase(
+            callLogRepository = callLogRepository,
+            blockRuleRepository = blockRuleRepository,
+            classifier = SpamClassifier(PhoneNumberNormalizer()),
+        ),
+        uiMapper = CallUiMapper(ZoneOffset.UTC),
+    )
+
+    /** Repository chỉ trả kết quả khi [gate] hoàn tất, để quan sát trạng thái đang làm mới. */
+    private class GatedCallLogRepository(
+        private val calls: List<CallRecord>,
+    ) : CallLogRepository {
+        var gate: CompletableDeferred<Unit>? = null
+
+        override suspend fun getRecentCalls(limit: Int): List<CallRecord> {
+            gate?.await()
+            return calls.take(limit)
+        }
     }
 }

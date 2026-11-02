@@ -18,7 +18,7 @@ class CallUiMapper @Inject constructor(
 
     fun toUiState(calls: List<ClassifiedCall>): CallLogUiState =
         if (calls.isEmpty()) {
-            CallLogUiState.Empty
+            CallLogUiState.Empty()
         } else {
             CallLogUiState.Content(
                 calls = calls.map(::toUiModel),

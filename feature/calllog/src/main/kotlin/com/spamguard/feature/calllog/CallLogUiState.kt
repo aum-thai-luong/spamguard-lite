@@ -8,12 +8,16 @@ sealed interface CallLogUiState {
 
     data object Loading : CallLogUiState
 
-    data object Empty : CallLogUiState
+    /** [isRefreshing] bật khi người dùng kéo để làm mới. */
+    data class Empty(
+        val isRefreshing: Boolean = false,
+    ) : CallLogUiState
 
     data object Error : CallLogUiState
 
     data class Content(
         val calls: List<CallUiModel>,
         val blockedCount: Int,
+        val isRefreshing: Boolean = false,
     ) : CallLogUiState
 }
