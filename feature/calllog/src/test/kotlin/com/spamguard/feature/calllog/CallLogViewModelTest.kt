@@ -58,6 +58,16 @@ class CallLogViewModelTest {
     }
 
     @Test
+    fun `denied permission shows rationale without reading call log`() = runTest {
+        // Provider thật ném SecurityException khi app chưa có READ_CALL_LOG.
+        callLogRepository.failure = SecurityException("Permission Denial: requires android.permission.READ_CALL_LOG")
+
+        viewModel.onPermissionResult(granted = false)
+
+        assertEquals(CallLogUiState.PermissionRequired, viewModel.uiState.value)
+    }
+
+    @Test
     fun `unavailable call log shows error`() {
         callLogRepository.failure = CallLogUnavailableException("provider down")
 
