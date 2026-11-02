@@ -34,10 +34,21 @@ class CallLogViewModel @Inject constructor(
 
     fun onRetry() = loadCalls()
 
-    private fun loadCalls() {
+    /** Kéo để làm mới: giữ danh sách đang hiển thị trong lúc đọc lại nhật ký cuộc gọi. */
+    fun onRefresh() {
+        val refreshing = when (val state = _uiState.value) {
+            is CallLogUiState.Content -> state.copy(isRefreshing = true)
+            is CallLogUiState.Empty -> state.copy(isRefreshing = true)
+            else -> return
+        }
+        _uiState.value = refreshing
+        loadCalls(showLoading = false)
+    }
+
+    private fun loadCalls(showLoading: Boolean = true) {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            _uiState.value = CallLogUiState.Loading
+            if (showLoading) _uiState.value = CallLogUiState.Loading
             getClassifiedCalls(MAX_CALLS)
                 .map(uiMapper::toUiState)
                 .catch { error ->

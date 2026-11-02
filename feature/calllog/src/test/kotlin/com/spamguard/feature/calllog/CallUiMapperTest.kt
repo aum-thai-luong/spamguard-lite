@@ -71,6 +71,6 @@ class CallUiMapperTest {
 
     @Test
     fun `empty list maps to empty state`() {
-        assertEquals(CallLogUiState.Empty, mapper.toUiState(emptyList()))
+        assertEquals(CallLogUiState.Empty(), mapper.toUiState(emptyList()))
     }
 }
