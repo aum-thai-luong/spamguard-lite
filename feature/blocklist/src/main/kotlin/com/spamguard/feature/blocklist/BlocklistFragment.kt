@@ -1,33 +1,42 @@
 package com.spamguard.feature.blocklist
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import androidx.core.view.isVisible
+import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.material.snackbar.Snackbar
-import com.spamguard.feature.blocklist.databinding.FragmentBlocklistBinding
 import com.spamguard.feature.blocklist.model.BlockRuleUiModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
+/** Giữ chỗ trong Navigation và quản lý dialog; giao diện vẽ bằng [BlocklistScreen]. */
 @AndroidEntryPoint
-class BlocklistFragment : Fragment(R.layout.fragment_blocklist) {
+class BlocklistFragment : Fragment() {
 
     private val viewModel: BlocklistViewModel by viewModels()
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View = ComposeView(requireContext()).apply {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        setContent {
+            BlocklistTheme {
+                BlocklistRoute(
+                    viewModel = viewModel,
+                    onAddClick = ::showAddRuleDialog,
+                    onDeleteClick = ::confirmDeletion,
+                )
+            }
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentBlocklistBinding.bind(view)
-        val adapter = BlockRuleAdapter(onDeleteClick = ::confirmDeletion)
-        binding.ruleList.adapter = adapter
-        binding.addRuleButton.setOnClickListener { showAddRuleDialog() }
-
         listenForDialogResults()
-        observeUiState(binding, adapter)
     }
 
     private fun showAddRuleDialog() {
@@ -52,28 +61,6 @@ class BlocklistFragment : Fragment(R.layout.fragment_blocklist) {
             viewLifecycleOwner,
         ) { _, result ->
             viewModel.onDeleteRule(ConfirmDeleteRuleDialogFragment.parseResult(result))
-        }
-    }
-
-    private fun observeUiState(binding: FragmentBlocklistBinding, adapter: BlockRuleAdapter) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state -> binding.render(state, adapter) }
-            }
-        }
-    }
-
-    private fun FragmentBlocklistBinding.render(state: BlocklistUiState, adapter: BlockRuleAdapter) {
-        progress.isVisible = state.isLoading
-        emptyMessage.isVisible = state.isEmpty
-        ruleList.isVisible = state.rules.isNotEmpty()
-        adapter.submitList(state.rules)
-
-        state.userMessageRes?.let { messageRes ->
-            Snackbar.make(root, messageRes, Snackbar.LENGTH_SHORT)
-                .setAnchorView(addRuleButton)
-                .show()
-            viewModel.onUserMessageShown()
         }
     }
 }
