@@ -2,7 +2,6 @@ package com.spamguard.feature.blocklist
 
 import android.app.Dialog
 import android.os.Bundle
-import android.view.LayoutInflater
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
@@ -17,7 +16,8 @@ import com.spamguard.feature.blocklist.databinding.DialogAddBlockRuleBinding
 class AddBlockRuleDialogFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val binding = DialogAddBlockRuleBinding.inflate(LayoutInflater.from(requireContext()))
+        // DialogFragment trả inflater của Fragment khi đang tạo dialog, không gọi lại onCreateDialog.
+        val binding = DialogAddBlockRuleBinding.inflate(layoutInflater)
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.blocklist_add_title)
             .setView(binding.root)
