@@ -25,12 +25,31 @@ class CallLogViewModel @Inject constructor(
 
     private var loadJob: Job? = null
 
-    fun onPermissionResult(granted: Boolean) {
+    /** [canAskAgain] là `false` khi hệ thống sẽ không hiện hộp thoại xin quyền nữa. */
+    fun onPermissionResult(granted: Boolean, canAskAgain: Boolean = true) {
         if (!granted) {
-            _uiState.value = CallLogUiState.PermissionRequired
+            _uiState.value = if (canAskAgain) {
+                CallLogUiState.PermissionRequired
+            } else {
+                CallLogUiState.PermissionDeniedPermanently
+            }
             return
         }
         loadCalls()
+    }
+
+    /**
+     * Màn hình hiện lên khi app đã có quyền: mở lại sau khi hệ thống dừng process, hoặc vừa
+     * bật quyền trong Cài đặt. Chỉ đọc khi chưa đọc, để xoay màn hình hay đổi tab không đọc lại.
+     */
+    fun onPermissionAvailable() {
+        when (_uiState.value) {
+            CallLogUiState.PermissionRequired,
+            CallLogUiState.PermissionDeniedPermanently,
+            -> loadCalls()
+
+            else -> Unit
+        }
     }
 
     fun onRetry() = loadCalls()

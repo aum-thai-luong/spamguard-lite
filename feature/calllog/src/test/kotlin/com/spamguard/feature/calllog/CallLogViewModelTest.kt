@@ -68,6 +68,48 @@ class CallLogViewModelTest {
     }
 
     @Test
+    fun `permanently denied permission offers settings without reading call log`() {
+        callLogRepository.failure = SecurityException("Permission Denial: requires android.permission.READ_CALL_LOG")
+
+        viewModel.onPermissionResult(granted = false, canAskAgain = false)
+
+        assertEquals(CallLogUiState.PermissionDeniedPermanently, viewModel.uiState.value)
+    }
+
+    @Test
+    fun `available permission loads calls when nothing was read yet`() {
+        // Ví dụ: hệ thống dừng process, ViewModel mới bắt đầu ở PermissionRequired dù quyền vẫn còn.
+        callLogRepository.calls = listOf(aCallRecord(id = 1))
+
+        viewModel.onPermissionAvailable()
+
+        val state = viewModel.uiState.value as CallLogUiState.Content
+        assertEquals(listOf(1L), state.calls.map { it.id })
+    }
+
+    @Test
+    fun `permission enabled in settings loads calls`() {
+        viewModel.onPermissionResult(granted = false, canAskAgain = false)
+        callLogRepository.calls = listOf(aCallRecord(id = 1))
+
+        viewModel.onPermissionAvailable()
+
+        assertTrue(viewModel.uiState.value is CallLogUiState.Content)
+    }
+
+    @Test
+    fun `available permission does not reread calls already shown`() {
+        callLogRepository.calls = listOf(aCallRecord(id = 1))
+        viewModel.onPermissionResult(granted = true)
+        callLogRepository.calls = listOf(aCallRecord(id = 2))
+
+        viewModel.onPermissionAvailable()
+
+        val state = viewModel.uiState.value as CallLogUiState.Content
+        assertEquals(listOf(1L), state.calls.map { it.id })
+    }
+
+    @Test
     fun `unavailable call log shows error`() {
         callLogRepository.failure = CallLogUnavailableException("provider down")
 

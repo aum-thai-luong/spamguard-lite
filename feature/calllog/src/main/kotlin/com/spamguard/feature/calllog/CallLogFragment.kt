@@ -1,8 +1,11 @@
 package com.spamguard.feature.calllog
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +26,11 @@ class CallLogFragment : Fragment() {
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { granted -> viewModel.onPermissionResult(granted) }
+    ) { granted ->
+        // Bị từ chối mà hệ thống không đòi giải thích nữa: lần xin sau sẽ bị từ chối ngay, không hiện hộp thoại.
+        val canAskAgain = granted || shouldShowRequestPermissionRationale(Manifest.permission.READ_CALL_LOG)
+        viewModel.onPermissionResult(granted, canAskAgain)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,7 +42,8 @@ class CallLogFragment : Fragment() {
             SpamGuardTheme {
                 CallLogRoute(
                     viewModel = viewModel,
-                    onRequestPermission = { permissionLauncher.launch(Manifest.permission.READ_CALL_LOG) },
+                    onRequestPermission = ::requestCallLogPermission,
+                    onOpenSettings = ::openAppSettings,
                 )
             }
         }
@@ -43,17 +51,27 @@ class CallLogFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (savedInstanceState == null) {
-            requestCallLogAccess()
+        // Chỉ tự hỏi quyền lần đầu mở màn hình; khi khôi phục, người dùng tự bấm "Cấp quyền".
+        if (savedInstanceState == null && !hasCallLogPermission()) {
+            requestCallLogPermission()
         }
     }
 
-    private fun requestCallLogAccess() {
+    override fun onResume() {
+        super.onResume()
+        // Bắt kịp quyền vừa bật trong Cài đặt, hoặc đọc lại sau khi hệ thống dừng process.
         if (hasCallLogPermission()) {
-            viewModel.onPermissionResult(granted = true)
-        } else {
-            permissionLauncher.launch(Manifest.permission.READ_CALL_LOG)
+            viewModel.onPermissionAvailable()
         }
+    }
+
+    private fun requestCallLogPermission() {
+        permissionLauncher.launch(Manifest.permission.READ_CALL_LOG)
+    }
+
+    private fun openAppSettings() {
+        val uri = Uri.fromParts("package", requireContext().packageName, null)
+        startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri))
     }
 
     private fun hasCallLogPermission(): Boolean =

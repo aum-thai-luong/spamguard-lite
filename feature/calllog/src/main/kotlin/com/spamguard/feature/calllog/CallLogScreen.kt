@@ -34,17 +34,22 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.calllog.model.CallUiModel
 
-/** Nối [CallLogViewModel] với [CallLogScreen]; quyền hệ thống do Fragment xin hộ qua [onRequestPermission]. */
+/**
+ * Nối [CallLogViewModel] với [CallLogScreen]; quyền hệ thống do Fragment xin hộ qua
+ * [onRequestPermission], hoặc mở Cài đặt qua [onOpenSettings].
+ */
 @Composable
 internal fun CallLogRoute(
     viewModel: CallLogViewModel,
     onRequestPermission: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     CallLogScreen(
         uiState = uiState,
         onRequestPermission = onRequestPermission,
+        onOpenSettings = onOpenSettings,
         onRetry = viewModel::onRetry,
         onRefresh = viewModel::onRefresh,
         modifier = modifier,
@@ -57,6 +62,7 @@ internal fun CallLogRoute(
 internal fun CallLogScreen(
     uiState: CallLogUiState,
     onRequestPermission: () -> Unit,
+    onOpenSettings: () -> Unit,
     onRetry: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
@@ -70,6 +76,13 @@ internal fun CallLogScreen(
             messageRes = R.string.call_log_permission_rationale,
             actionRes = R.string.call_log_action_grant_permission,
             onAction = onRequestPermission,
+            modifier = modifier.fillMaxSize(),
+        )
+
+        CallLogUiState.PermissionDeniedPermanently -> MessageState(
+            messageRes = R.string.call_log_permission_denied_permanently,
+            actionRes = R.string.call_log_action_open_settings,
+            onAction = onOpenSettings,
             modifier = modifier.fillMaxSize(),
         )
 
@@ -239,7 +252,13 @@ private val previewCalls = listOf(
 @Composable
 private fun CallLogScreenPreview(uiState: CallLogUiState) {
     SpamGuardTheme {
-        CallLogScreen(uiState = uiState, onRequestPermission = {}, onRetry = {}, onRefresh = {})
+        CallLogScreen(
+            uiState = uiState,
+            onRequestPermission = {},
+            onOpenSettings = {},
+            onRetry = {},
+            onRefresh = {},
+        )
     }
 }
 
@@ -259,6 +278,11 @@ private fun ErrorPreview() = CallLogScreenPreview(CallLogUiState.Error)
 @Preview(showBackground = true)
 @Composable
 private fun PermissionRequiredPreview() = CallLogScreenPreview(CallLogUiState.PermissionRequired)
+
+@Preview(showBackground = true)
+@Composable
+private fun PermissionDeniedPermanentlyPreview() =
+    CallLogScreenPreview(CallLogUiState.PermissionDeniedPermanently)
 
 @Preview(showBackground = true)
 @Composable
