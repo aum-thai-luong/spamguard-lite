@@ -66,5 +66,31 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
     testImplementation(libs.androidx.fragment.testing)
-    debugImplementation(libs.androidx.fragment.testing.manifest)
+    // Activity rỗng cho test: chỉ cần ở test JVM (Robolectric). Khai báo `debugImplementation`
+    // sẽ gộp Activity exported vào APK debug của app.
+    testImplementation(libs.androidx.fragment.testing.manifest)
+}
+
+// Robolectric mặc định tự tải jar android-all từ Maven Central lúc chạy test, bỏ qua
+// cache, mirror và proxy của Gradle. Ở đây Gradle tải jar như mọi dependency khác, còn
+// Robolectric chạy offline và đọc jar từ thư mục build. Thiếu jar nào, test báo
+// "Path is not a file: .../android-all-instrumented-<version>.jar"; thêm version đó vào catalog.
+// Mỗi jar một configuration riêng: cùng group:name nên gộp chung thì Gradle chỉ giữ version cao nhất.
+val robolectricAndroidAllJars = listOf(
+    libs.robolectric.android.all.sdk34,
+    libs.robolectric.android.all.sdk35,
+).map { jar ->
+    configurations.detachedConfiguration(dependencies.create(jar.get())).apply { isTransitive = false }
+}
+
+val prepareRobolectricJars by tasks.registering(Sync::class) {
+    from(robolectricAndroidAllJars)
+    into(layout.buildDirectory.dir("robolectric-jars"))
+}
+
+tasks.withType<Test>().configureEach {
+    dependsOn(prepareRobolectricJars)
+    val jarsDir = prepareRobolectricJars.map { it.destinationDir.absolutePath }
+    systemProperty("robolectric.offline", "true")
+    jvmArgumentProviders.add(CommandLineArgumentProvider { listOf("-Drobolectric.dependency.dir=${jarsDir.get()}") })
 }

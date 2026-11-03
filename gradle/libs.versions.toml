@@ -29,6 +29,10 @@ junit = "4.13.2"
 androidxTestCore = "1.6.1"
 androidxTestExtJunit = "1.2.1"
 robolectric = "4.14.1"
+# Jar Android của Robolectric: SDK 34 để chạy test, SDK 35 (= compileSdk) Robolectric
+# cũng đọc khi khởi động. Đổi cùng lúc với `robolectric`.
+robolectricAndroidAllSdk34 = "14-robolectric-10818077-i7"
+robolectricAndroidAllSdk35 = "15-robolectric-12650502-i7"
 material = "1.12.0"
 
 [libraries]
@@ -64,6 +68,8 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+robolectric-android-all-sdk34 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "robolectricAndroidAllSdk34" }
+robolectric-android-all-sdk35 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "robolectricAndroidAllSdk35" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
