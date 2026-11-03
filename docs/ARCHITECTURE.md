@@ -20,6 +20,7 @@ flowchart LR
     domain[":core:domain<br/>(Kotlin thuần)"]
     data[":core:data<br/>(Room, ContentResolver)"]
     testing[":core:testing<br/>(fake, test rule)"]
+    ui[":core:ui<br/>(theme XML + Compose)"]
 
     app --> calllog
     app --> blocklist
@@ -28,9 +29,14 @@ flowchart LR
     blocklist --> domain
     data --> domain
     testing --> domain
+    app --> ui
+    calllog --> ui
+    blocklist --> ui
 ```
 
 Feature module **không** phụ thuộc `:core:data`. Feature chỉ biết use case và interface repository trong domain.
+
+`:core:ui` chỉ chứa theme dùng chung (`Theme.SpamGuard` cho XML, `SpamGuardTheme` cho Compose), không chứa logic và không phụ thuộc domain.
 
 ## Luồng dữ liệu (UDF)
 
@@ -40,13 +46,14 @@ Lấy ví dụ màn hình **Cuộc gọi**:
 CallLogFragment ──onPermissionResult()──▶ CallLogViewModel
       ▲                                        │ GetClassifiedCallsUseCase(limit)
       │ uiState: StateFlow<CallLogUiState>     ▼
-      └──────── render(state) ◀── CallUiMapper ◀── Flow<List<ClassifiedCall>>
+      └── CallLogScreen(state) ◀── CallUiMapper ◀── Flow<List<ClassifiedCall>>
                                                      │
                        CallLogRepository ◀───────────┤ (đọc 1 lần)
                        BlockRuleRepository.observeRules() (phát lại khi quy tắc đổi)
 ```
 
-- **Fragment** chỉ làm 3 việc: gửi sự kiện lên ViewModel, collect `uiState` bằng `repeatOnLifecycle(STARTED)`, và gọi `render(state)`. Trong Fragment không có logic nghiệp vụ.
+- **Fragment** chỉ là chỗ chứa: trả về `ComposeView` bọc `SpamGuardTheme`, xin quyền hệ thống và mở dialog. Trong Fragment không có logic nghiệp vụ.
+- **Route/Screen**: `CallLogRoute` collect `uiState` bằng `collectAsStateWithLifecycle()` rồi truyền cho `CallLogScreen`. Screen là composable không giữ state, chỉ vẽ `uiState` và gọi callback sự kiện.
 - **ViewModel** giữ trạng thái màn hình trong `StateFlow`. Trạng thái của mỗi màn hình được mô tả bằng một kiểu duy nhất (`CallLogUiState`, `BlocklistUiState`).
 - **Mapper** (`CallUiMapper`, `BlockRuleUiMapper`) chuyển model domain thành model hiển thị: định dạng thời gian, chọn icon, chọn chuỗi. Nhờ vậy ViewModel gọn và mapper test được riêng.
 - **Use case** chỉ làm một việc, gọi qua `operator fun invoke`.
@@ -64,10 +71,11 @@ CallLogFragment ──onPermissionResult()──▶ CallLogViewModel
 
 ## Quy ước
 
-- **Trạng thái UI**: dùng `StateFlow` và `repeatOnLifecycle`. Không dùng LiveData.
+- **Trạng thái UI**: ViewModel phát `StateFlow`; Route collect bằng `collectAsStateWithLifecycle()`. Không dùng LiveData.
+- **Compose**: Screen không giữ state và không gọi repository; item `LazyColumn` có `key` ổn định; mỗi trạng thái màn hình có `@Preview`.
 - **Thông báo một lần** (ví dụ snackbar): đặt trong UI state (`userMessageRes`). UI hiển thị xong thì gọi `onUserMessageShown()`.
 - **Kết quả từ dialog**: dùng Fragment Result API (`setFragmentResult` / `setFragmentResultListener`). Dialog phải có constructor rỗng; dữ liệu đi qua `arguments` và bundle kết quả.
-- **ViewBinding**: không lưu binding vào field của Fragment. Tạo binding trong `onViewCreated` rồi truyền vào hàm `render`.
+- **ViewBinding** (chỉ còn ở dialog): tạo binding trong `onCreateDialog`, không lưu vào field.
 - **Lỗi**: ViewModel chỉ bắt các lỗi domain đã biết. Lỗi lập trình phải để lộ ra, không nuốt.
 - **Chuỗi hiển thị**: luôn đặt trong `strings.xml`, tên có tiền tố theo module (`call_log_*`, `blocklist_*`).
 - **Dữ liệu cá nhân**: không log số điện thoại hay tên danh bạ. Test dùng dữ liệu giả.
@@ -78,5 +86,5 @@ CallLogFragment ──onPermissionResult()──▶ CallLogViewModel
 1. Tạo module `feature/<tên>` (sao chép `build.gradle.kts` của `feature/blocklist`), rồi thêm vào `settings.gradle.kts`.
 2. Domain: thêm use case (và interface repository nếu cần).
 3. Data: cài đặt repository rồi `@Binds` trong `DataModule`.
-4. Feature: viết `UiState`, `UiMapper`, `ViewModel`, `Fragment`, layout, `strings.xml`; test cho ViewModel và mapper.
+4. Feature: viết `UiState`, `UiMapper`, `ViewModel`, `XxxRoute`/`XxxScreen` (kèm Preview), Fragment chứa `ComposeView`, `strings.xml`; test cho ViewModel và mapper.
 5. App: thêm destination vào `nav_graph.xml` và item vào `bottom_navigation.xml`.
