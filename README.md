@@ -2,7 +2,7 @@
 
 Ứng dụng Android mẫu dùng trong khóa **AI-Assisted Android Development**. App đọc nhật ký cuộc gọi, cho người dùng tạo quy tắc chặn theo số hoặc theo đầu số, rồi đánh dấu những cuộc gọi khớp quy tắc.
 
-Repo được viết theo **Clean Architecture + MVVM**, tuân thủ **SOLID**, giao diện dùng **XML + ViewBinding**. Mục đích là để khóa học có chỗ thực hành nâng cấp XML lên Jetpack Compose bằng AI agent.
+Repo được viết theo **Clean Architecture + MVVM**, tuân thủ **SOLID**, giao diện dùng **Jetpack Compose** (các màn hình đã được nâng cấp từ XML + ViewBinding bằng AI agent trong Lab 1–3; dialog vẫn dùng XML).
 
 > ⚠️ Repo **cố ý chứa 3 bug** cho Lab 2. Triệu chứng của từng bug nằm ở [BUGS.md](BUGS.md).
 
@@ -43,12 +43,13 @@ Lần build đầu tiên Room sẽ sinh schema vào `core/data/schemas/`. Hãy c
 ## Cấu trúc module
 
 ```
-app/                 MainActivity, Navigation, theme, cấu hình Hilt (TimeModule)
+app/                 MainActivity, Navigation, cấu hình Hilt (TimeModule)
 core/domain/         Kotlin thuần: model, interface repository, use case, SpamClassifier
 core/data/           Room, đọc CallLog provider, implementation repository, DI module
 core/testing/        Fake repository, builder dữ liệu test, MainDispatcherRule
-feature/calllog/     Màn hình nhật ký cuộc gọi (Fragment + ViewModel + XML)
-feature/blocklist/   Màn hình danh sách chặn + 2 dialog
+core/ui/             Theme dùng chung: Theme.SpamGuard (XML) và SpamGuardTheme (Compose)
+feature/calllog/     Màn hình nhật ký cuộc gọi (Fragment + Compose + ViewModel)
+feature/blocklist/   Màn hình danh sách chặn (Compose) + 2 dialog (XML)
 scripts/             Script tiện ích cho lab
 ```
 
@@ -56,7 +57,7 @@ Chi tiết về kiến trúc, luồng dữ liệu và cách áp dụng SOLID n�
 
 ## Công nghệ
 
-Kotlin 2.0 · Coroutines/Flow · Hilt · Room · Navigation Component · ViewBinding · Material 3 · JUnit 4 + kotlinx-coroutines-test
+Kotlin 2.0 · Coroutines/Flow · Hilt · Room · Navigation Component · Jetpack Compose · Material 3 · JUnit 4 + kotlinx-coroutines-test · Robolectric
 
 Phiên bản thư viện được ghim trong `gradle/libs.versions.toml`. Đây là bộ phiên bản đã ổn định; nếu muốn nâng cấp thì dùng AGP Upgrade Assistant trong Android Studio, hoặc giao cho Claude Code như một bài tập.
 
