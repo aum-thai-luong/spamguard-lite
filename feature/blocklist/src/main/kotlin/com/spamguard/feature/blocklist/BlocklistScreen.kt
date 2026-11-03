@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.blocklist.model.BlockRuleUiModel
 import kotlinx.coroutines.launch
 
@@ -193,7 +194,7 @@ private val previewRules = listOf(
 
 @Composable
 private fun BlocklistScreenPreview(uiState: BlocklistUiState) {
-    BlocklistTheme {
+    SpamGuardTheme {
         BlocklistScreen(uiState = uiState, onAddClick = {}, onDeleteClick = {}, onUserMessageShown = {})
     }
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.calllog.model.CallUiModel
 
 /** Nối [CallLogViewModel] với [CallLogScreen]; quyền hệ thống do Fragment xin hộ qua [onRequestPermission]. */
@@ -237,7 +238,7 @@ private val previewCalls = listOf(
 
 @Composable
 private fun CallLogScreenPreview(uiState: CallLogUiState) {
-    CallLogTheme {
+    SpamGuardTheme {
         CallLogScreen(uiState = uiState, onRequestPermission = {}, onRetry = {}, onRefresh = {})
     }
 }
