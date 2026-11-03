@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.spamguard.core.ui.theme.SpamGuardTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 /** Giữ chỗ trong Navigation và xin quyền hệ thống; giao diện vẽ bằng [CallLogScreen]. */
@@ -31,7 +32,7 @@ class CallLogFragment : Fragment() {
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            CallLogTheme {
+            SpamGuardTheme {
                 CallLogRoute(
                     viewModel = viewModel,
                     onRequestPermission = { permissionLauncher.launch(Manifest.permission.READ_CALL_LOG) },

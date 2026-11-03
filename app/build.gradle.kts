@@ -48,6 +48,7 @@ kotlin {
 
 dependencies {
     implementation(project(":core:data"))
+    implementation(project(":core:ui"))
     implementation(project(":feature:calllog"))
     implementation(project(":feature:blocklist"))
 

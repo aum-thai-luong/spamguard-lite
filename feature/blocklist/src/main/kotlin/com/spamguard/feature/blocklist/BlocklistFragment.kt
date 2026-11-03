@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.blocklist.model.BlockRuleUiModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -24,7 +25,7 @@ class BlocklistFragment : Fragment() {
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            BlocklistTheme {
+            SpamGuardTheme {
                 BlocklistRoute(
                     viewModel = viewModel,
                     onAddClick = ::showAddRuleDialog,
