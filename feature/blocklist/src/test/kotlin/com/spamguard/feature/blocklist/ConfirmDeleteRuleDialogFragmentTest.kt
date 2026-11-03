@@ -8,7 +8,7 @@ import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragment
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
@@ -51,15 +51,15 @@ class ConfirmDeleteRuleDialogFragmentTest {
 
         scenario.clickButton(DialogInterface.BUTTON_NEGATIVE)
 
-        assertNull(results.firstOrNull())
+        assertTrue(results.isEmpty())
     }
 
     private fun launchDialog(ruleId: Long): FragmentScenario<ConfirmDeleteRuleDialogFragment> =
         launchFragment(
             // Lấy arguments từ newInstance để test đúng đường mà BlocklistFragment dùng.
             fragmentArgs = ConfirmDeleteRuleDialogFragment.newInstance(ruleId, "0900").requireArguments(),
-            // MaterialAlertDialogBuilder cần theme Material.
-            themeResId = com.google.android.material.R.style.Theme_Material3_DayNight_NoActionBar,
+            // Đúng theme của app (MaterialAlertDialogBuilder cần theme Material).
+            themeResId = com.spamguard.core.ui.R.style.Theme_SpamGuard,
         )
 
     /** Đăng ký listener trên FragmentManager chứa dialog; gọi lại sau mỗi lần recreate. */
