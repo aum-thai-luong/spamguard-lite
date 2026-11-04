@@ -30,6 +30,17 @@ Use `./gradlew` from Git Bash or `.\gradlew.bat` from PowerShell.
 ./gradlew :feature:calllog:testDebugUnitTest --tests "*CallLogViewModelTest"
 ```
 
+Performance (needs a connected emulator with a seeded call log; `assembleRelease` itself does not):
+
+```bash
+./gradlew :app:generateBaselineProfile                           # regenerate app/src/release/generated/baselineProfiles/ (commit it)
+./gradlew :baselineprofile:connectedBenchmarkReleaseAndroidTest  # cold startup, None vs Baseline Profile
+```
+
+On an emulator the benchmark refuses to run unless you add `-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR` (numbers are then only good for relative comparison).
+
+`:baselineprofile` drives the app through UiAutomator and finds UI by the `call_log_list` testTag (exposed via `testTagsAsResourceId` in `CallLogRoute`) and the `blocklistFragment` menu id. Keep those stable, and regenerate the profile after changing the main screens.
+
 `feature/blocklist` has Robolectric tests (dialog and Compose UI). Robolectric runs offline there: its `android-all` jars are Gradle dependencies (`robolectricAndroidAllSdk*` in the version catalog) that must be bumped together with `robolectric`.
 
 If seeding fails, fake calls with `adb emu gsm call <number>` followed by `adb emu gsm cancel <number>`.

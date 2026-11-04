@@ -36,6 +36,8 @@ flowchart LR
 
 Feature module **không** phụ thuộc `:core:data`. Feature chỉ biết use case và interface repository trong domain.
 
+`:baselineprofile` là module test (`com.android.test`) nằm ngoài sơ đồ trên. Nó chạy `:app` trên thiết bị bằng UiAutomator để sinh Baseline Profile và đo hiệu năng. Module này chỉ biết package name và các resource-id/testTag (`call_log_list`, `blocklistFragment`), không phụ thuộc code của module nào.
+
 `:core:ui` chỉ chứa theme dùng chung (`Theme.SpamGuard` cho XML, `SpamGuardTheme` cho Compose), không chứa logic và không phụ thuộc domain.
 
 ## Luồng dữ liệu (UDF)

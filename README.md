@@ -38,6 +38,17 @@ Nếu script không thêm được dữ liệu trên máy của bạn, hãy tạ
 ./gradlew lint                                   # Android lint
 ```
 
+### Hiệu năng (cần emulator đã chạy `seed-call-log.sh`)
+
+```bash
+./gradlew :app:generateBaselineProfile                           # sinh lại Baseline Profile
+./gradlew :baselineprofile:connectedBenchmarkReleaseAndroidTest  # đo khởi động lạnh
+```
+
+Macrobenchmark mặc định từ chối chạy trên emulator vì số đo không đáng tin. Muốn so tương đối trên emulator thì thêm `-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR`.
+
+Profile được ghi vào `app/src/release/generated/baselineProfiles/` và cần commit. Hãy sinh lại sau khi đổi màn hình hoặc hành trình chính. Bản release dùng profile đã commit, nên `assembleRelease` không cần thiết bị.
+
 Lần build đầu tiên Room sẽ sinh schema vào `core/data/schemas/`. Hãy commit thư mục này, vì nó cần cho việc viết migration sau này.
 
 ## Cấu trúc module
@@ -49,7 +60,8 @@ core/data/           Room, đọc CallLog provider, implementation repository, D
 core/testing/        Fake repository, builder dữ liệu test, MainDispatcherRule
 core/ui/             Theme dùng chung: Theme.SpamGuard (XML) và SpamGuardTheme (Compose)
 feature/calllog/     Màn hình nhật ký cuộc gọi (Fragment + Compose + ViewModel)
-feature/blocklist/   Màn hình danh sách chặn (Compose) + 2 dialog (XML)
+feature/blocklist/   Màn hình danh sách chặn (Compose) + 2 dialog (XML) + CallScreeningService
+baselineprofile/     Sinh Baseline Profile và macrobenchmark cho :app (chạy trên thiết bị)
 scripts/             Script tiện ích cho lab
 ```
 
