@@ -9,11 +9,17 @@ internal class ContentResolverCallLogDataSource @Inject constructor(
     private val contentResolver: ContentResolver,
 ) : CallLogDataSource {
 
-    override fun queryRecentCalls(limit: Int): List<CallLogEntry>? =
-        contentResolver
-            .query(CallLog.Calls.CONTENT_URI, PROJECTION, null, null, SORT_NEWEST_FIRST)
+    override fun queryRecentCalls(limit: Int): List<CallLogEntry>? {
+        // Provider chỉ dựng cursor cho `limit` dòng thay vì toàn bộ nhật ký.
+        val uri = CallLog.Calls.CONTENT_URI.buildUpon()
+            .appendQueryParameter(CallLog.Calls.LIMIT_PARAM_KEY, limit.toString())
+            .build()
+        return contentResolver
+            .query(uri, PROJECTION, null, null, SORT_NEWEST_FIRST)
             ?.use { cursor -> cursor.readEntries(limit) }
+    }
 
+    /** Vẫn dừng ở [limit]: phòng provider của hãng bỏ qua tham số `limit`. */
     private fun Cursor.readEntries(limit: Int): List<CallLogEntry> {
         val idColumn = getColumnIndexOrThrow(CallLog.Calls._ID)
         val numberColumn = getColumnIndexOrThrow(CallLog.Calls.NUMBER)
