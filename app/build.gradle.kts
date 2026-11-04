@@ -23,6 +23,8 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            // Bỏ resource không còn được tham chiếu sau khi R8 lược code.
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
