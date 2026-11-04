@@ -5,6 +5,7 @@ import com.spamguard.core.domain.repository.BlockRuleRepository
 import com.spamguard.core.domain.repository.CallLogRepository
 import com.spamguard.core.domain.spam.SpamClassifier
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -23,7 +24,10 @@ class GetClassifiedCallsUseCase @Inject constructor(
     operator fun invoke(limit: Int): Flow<List<ClassifiedCall>> = flow {
         val calls = callLogRepository.getRecentCalls(limit)
         emitAll(
-            blockRuleRepository.observeRules().map { rules -> classifier.classify(calls, rules) },
+            blockRuleRepository.observeRules()
+                // Room phát lại sau mọi lần ghi vào bảng; chỉ phân loại lại khi quy tắc thật sự đổi.
+                .distinctUntilChanged()
+                .map { rules -> classifier.classify(calls, rules) },
         )
     }
 }
