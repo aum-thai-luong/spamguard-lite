@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 android {
@@ -48,6 +49,12 @@ kotlin {
     }
 }
 
+baselineProfile {
+    // Build release dùng profile đã commit; chỉ sinh lại khi chạy :app:generateBaselineProfile
+    // (cần emulator), để assembleRelease không đòi thiết bị.
+    automaticGenerationDuringBuild = false
+}
+
 dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:ui"))
@@ -60,6 +67,9 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.material)
+
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

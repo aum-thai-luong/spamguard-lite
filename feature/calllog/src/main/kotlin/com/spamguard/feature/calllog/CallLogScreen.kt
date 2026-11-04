@@ -22,8 +22,12 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +42,7 @@ import com.spamguard.feature.calllog.model.CallUiModel
  * Nối [CallLogViewModel] với [CallLogScreen]; quyền hệ thống do Fragment xin hộ qua
  * [onRequestPermission], hoặc mở Cài đặt qua [onOpenSettings].
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun CallLogRoute(
     viewModel: CallLogViewModel,
@@ -52,7 +57,8 @@ internal fun CallLogRoute(
         onOpenSettings = onOpenSettings,
         onRetry = viewModel::onRetry,
         onRefresh = viewModel::onRefresh,
-        modifier = modifier,
+        // Lộ testTag thành resource-id để UiAutomator (Baseline Profile, macrobenchmark) tìm được.
+        modifier = modifier.semantics { testTagsAsResourceId = true },
     )
 }
 
@@ -125,7 +131,11 @@ private fun CallList(
     blockedCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier
+            .fillMaxSize()
+            .testTag(CALL_LOG_LIST_TAG),
+    ) {
         // contentType giúp Compose chỉ tái sử dụng node giữa các dòng cùng loại khi cuộn.
         item(contentType = CONTENT_TYPE_SUMMARY) {
             Text(
@@ -140,6 +150,9 @@ private fun CallList(
         }
     }
 }
+
+/** Module :baselineprofile tìm danh sách bằng tag này (xem `testTagsAsResourceId` ở [CallLogRoute]). */
+internal const val CALL_LOG_LIST_TAG = "call_log_list"
 
 private const val CONTENT_TYPE_SUMMARY = "summary"
 private const val CONTENT_TYPE_CALL = "call"

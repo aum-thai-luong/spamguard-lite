@@ -17,6 +17,7 @@ dependencyResolutionManagement {
 rootProject.name = "SpamGuardLite"
 
 include(":app")
+include(":baselineprofile")
 include(":core:domain")
 include(":core:data")
 include(":core:testing")
