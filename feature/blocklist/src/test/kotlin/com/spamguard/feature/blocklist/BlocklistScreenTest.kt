@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.spamguard.core.ui.theme.SpamGuardTheme
@@ -28,6 +29,7 @@ class BlocklistScreenTest {
 
     private var uiState by mutableStateOf(BlocklistUiState(isLoading = false))
     private var shownCount = 0
+    private var enableScreeningClicks = 0
 
     @Before
     fun setUp() {
@@ -37,6 +39,7 @@ class BlocklistScreenTest {
                     uiState = uiState,
                     onAddClick = {},
                     onDeleteClick = {},
+                    onEnableScreeningClick = { enableScreeningClicks++ },
                     // Giống ViewModel: báo đã hiện thì xóa thông báo khỏi state.
                     onUserMessageShown = {
                         shownCount++
@@ -74,6 +77,35 @@ class BlocklistScreenTest {
 
         composeRule.onNodeWithText(text(R.string.blocklist_message_added)).assertIsDisplayed()
         assertEquals(2, shownCount)
+    }
+
+    @Test
+    fun `screening banner is hidden when the role is unsupported`() {
+        composeRule.onNodeWithText(text(R.string.blocklist_screening_disabled)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.blocklist_screening_enabled)).assertDoesNotExist()
+    }
+
+    @Test
+    fun `disabled screening offers a button that requests the role`() {
+        setScreeningStatus(ScreeningStatus.Disabled)
+
+        composeRule.onNodeWithText(text(R.string.blocklist_screening_disabled)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.blocklist_action_enable_screening)).performClick()
+
+        assertEquals(1, enableScreeningClicks)
+    }
+
+    @Test
+    fun `enabled screening shows status without the enable button`() {
+        setScreeningStatus(ScreeningStatus.Enabled)
+
+        composeRule.onNodeWithText(text(R.string.blocklist_screening_enabled)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.blocklist_action_enable_screening)).assertDoesNotExist()
+    }
+
+    private fun setScreeningStatus(status: ScreeningStatus) {
+        composeRule.runOnIdle { uiState = uiState.copy(screeningStatus = status) }
+        composeRule.waitForIdle()
     }
 
     private fun showMessage(messageRes: Int) {

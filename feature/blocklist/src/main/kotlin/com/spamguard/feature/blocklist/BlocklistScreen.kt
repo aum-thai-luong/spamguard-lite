@@ -19,7 +19,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +46,7 @@ internal fun BlocklistRoute(
     viewModel: BlocklistViewModel,
     onAddClick: () -> Unit,
     onDeleteClick: (BlockRuleUiModel) -> Unit,
+    onEnableScreeningClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -51,6 +54,7 @@ internal fun BlocklistRoute(
         uiState = uiState,
         onAddClick = onAddClick,
         onDeleteClick = onDeleteClick,
+        onEnableScreeningClick = onEnableScreeningClick,
         onUserMessageShown = viewModel::onUserMessageShown,
         modifier = modifier,
     )
@@ -62,6 +66,7 @@ internal fun BlocklistScreen(
     uiState: BlocklistUiState,
     onAddClick: () -> Unit,
     onDeleteClick: (BlockRuleUiModel) -> Unit,
+    onEnableScreeningClick: () -> Unit,
     onUserMessageShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -81,28 +86,76 @@ internal fun BlocklistScreen(
             )
         },
     ) { innerPadding ->
-        val contentModifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-        when {
-            uiState.isLoading -> Box(contentModifier, contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            ScreeningBanner(status = uiState.screeningStatus, onEnableClick = onEnableScreeningClick)
 
-            uiState.isEmpty -> Box(contentModifier, contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.blocklist_empty),
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(32.dp),
+            val contentModifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+            when {
+                uiState.isLoading -> Box(contentModifier, contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+
+                uiState.isEmpty -> Box(contentModifier, contentAlignment = Alignment.Center) {
+                    Text(
+                        text = stringResource(R.string.blocklist_empty),
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(32.dp),
+                    )
+                }
+
+                else -> RuleList(
+                    rules = uiState.rules,
+                    onDeleteClick = onDeleteClick,
+                    modifier = contentModifier,
                 )
             }
+        }
+    }
+}
 
-            else -> RuleList(
-                rules = uiState.rules,
-                onDeleteClick = onDeleteClick,
-                modifier = contentModifier,
+/** Cho biết app chỉ đánh dấu hay đang từ chối thật các cuộc gọi khớp quy tắc. */
+@Composable
+private fun ScreeningBanner(
+    status: ScreeningStatus,
+    onEnableClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (status == ScreeningStatus.Unsupported) return
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .heightIn(min = 56.dp)
+                .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+        ) {
+            val textRes = when (status) {
+                ScreeningStatus.Enabled -> R.string.blocklist_screening_enabled
+                else -> R.string.blocklist_screening_disabled
+            }
+            Text(
+                text = stringResource(textRes),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
             )
+            if (status == ScreeningStatus.Disabled) {
+                TextButton(onClick = onEnableClick) {
+                    Text(stringResource(R.string.blocklist_action_enable_screening))
+                }
+            }
         }
     }
 }
@@ -195,7 +248,13 @@ private val previewRules = listOf(
 @Composable
 private fun BlocklistScreenPreview(uiState: BlocklistUiState) {
     SpamGuardTheme {
-        BlocklistScreen(uiState = uiState, onAddClick = {}, onDeleteClick = {}, onUserMessageShown = {})
+        BlocklistScreen(
+            uiState = uiState,
+            onAddClick = {},
+            onDeleteClick = {},
+            onEnableScreeningClick = {},
+            onUserMessageShown = {},
+        )
     }
 }
 
@@ -203,6 +262,18 @@ private fun BlocklistScreenPreview(uiState: BlocklistUiState) {
 @Composable
 private fun RulesPreview() =
     BlocklistScreenPreview(BlocklistUiState(isLoading = false, rules = previewRules))
+
+@Preview(showBackground = true)
+@Composable
+private fun ScreeningDisabledPreview() = BlocklistScreenPreview(
+    BlocklistUiState(isLoading = false, rules = previewRules, screeningStatus = ScreeningStatus.Disabled),
+)
+
+@Preview(showBackground = true)
+@Composable
+private fun ScreeningEnabledPreview() = BlocklistScreenPreview(
+    BlocklistUiState(isLoading = false, rules = previewRules, screeningStatus = ScreeningStatus.Enabled),
+)
 
 @Preview(showBackground = true)
 @Composable

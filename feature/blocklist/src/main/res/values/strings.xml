@@ -16,11 +16,15 @@
     <string name="blocklist_action_cancel">Hủy</string>
 
     <string name="blocklist_delete_title">Xóa quy tắc?</string>
-    <string name="blocklist_delete_message">Các cuộc gọi khớp %1$s sẽ không còn bị đánh dấu spam.</string>
+    <string name="blocklist_delete_message">Các cuộc gọi khớp %1$s sẽ không còn bị chặn hay đánh dấu spam.</string>
     <string name="blocklist_action_delete">Xóa</string>
 
     <string name="blocklist_message_added">Đã thêm quy tắc chặn.</string>
     <string name="blocklist_message_duplicate">Quy tắc này đã có trong danh sách.</string>
     <string name="blocklist_message_invalid">Số hoặc đầu số không hợp lệ.</string>
     <string name="blocklist_message_deleted">Đã xóa quy tắc.</string>
+
+    <string name="blocklist_screening_disabled">Hiện chỉ đánh dấu cuộc gọi khớp quy tắc. Bật để tự động từ chối các cuộc gọi này.</string>
+    <string name="blocklist_screening_enabled">Đang tự động từ chối cuộc gọi khớp quy tắc.</string>
+    <string name="blocklist_action_enable_screening">Bật chặn</string>
 </resources>

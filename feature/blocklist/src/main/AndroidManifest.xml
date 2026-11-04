@@ -1,2 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Chỉ hệ thống (giữ BIND_SCREENING_SERVICE) được bind; app phải giữ vai trò sàng lọc cuộc gọi. -->
+        <service
+            android:name=".screening.BlockingCallScreeningService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SCREENING_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>

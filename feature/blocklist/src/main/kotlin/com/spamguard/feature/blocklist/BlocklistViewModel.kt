@@ -25,12 +25,14 @@ class BlocklistViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val userMessage = MutableStateFlow<Int?>(null)
+    private val screeningStatus = MutableStateFlow(ScreeningStatus.Unsupported)
 
     val uiState: StateFlow<BlocklistUiState> =
-        combine(observeBlockRules(), userMessage) { rules, messageRes ->
+        combine(observeBlockRules(), screeningStatus, userMessage) { rules, status, messageRes ->
             BlocklistUiState(
                 isLoading = false,
                 rules = rules.map(uiMapper::toUiModel),
+                screeningStatus = status,
                 userMessageRes = messageRes,
             )
         }.stateIn(
@@ -54,6 +56,11 @@ class BlocklistViewModel @Inject constructor(
             removeBlockRule(ruleId)
             userMessage.value = R.string.blocklist_message_deleted
         }
+    }
+
+    /** Fragment đọc vai trò sàng lọc từ hệ thống (mỗi lần quay lại màn hình) và báo vào đây. */
+    fun onScreeningStatusChecked(status: ScreeningStatus) {
+        screeningStatus.value = status
     }
 
     fun onUserMessageShown() {

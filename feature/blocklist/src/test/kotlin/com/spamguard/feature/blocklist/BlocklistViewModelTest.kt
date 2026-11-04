@@ -109,6 +109,24 @@ class BlocklistViewModelTest {
         assertFalse(viewModel.uiState.value.isLoading)
     }
 
+    @Test
+    fun `screening is unsupported until the fragment reports the role`() = runTest {
+        collectUiState()
+
+        assertEquals(ScreeningStatus.Unsupported, viewModel.uiState.value.screeningStatus)
+    }
+
+    @Test
+    fun `reported screening status is exposed in ui state`() = runTest {
+        collectUiState()
+
+        viewModel.onScreeningStatusChecked(ScreeningStatus.Disabled)
+        assertEquals(ScreeningStatus.Disabled, viewModel.uiState.value.screeningStatus)
+
+        viewModel.onScreeningStatusChecked(ScreeningStatus.Enabled)
+        assertEquals(ScreeningStatus.Enabled, viewModel.uiState.value.screeningStatus)
+    }
+
     // --- Test đặc tả: chốt hành vi hiện tại trước khi chuyển UI sang Compose. ---
 
     @Test
