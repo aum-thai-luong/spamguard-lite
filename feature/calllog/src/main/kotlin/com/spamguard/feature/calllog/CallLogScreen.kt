@@ -126,7 +126,8 @@ private fun CallList(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier.fillMaxSize()) {
-        item {
+        // contentType giúp Compose chỉ tái sử dụng node giữa các dòng cùng loại khi cuộn.
+        item(contentType = CONTENT_TYPE_SUMMARY) {
             Text(
                 text = pluralStringResource(R.plurals.call_log_blocked_summary, blockedCount, blockedCount),
                 style = MaterialTheme.typography.titleSmall,
@@ -134,11 +135,14 @@ private fun CallList(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             )
         }
-        items(calls, key = CallUiModel::id) { call ->
+        items(calls, key = CallUiModel::id, contentType = { CONTENT_TYPE_CALL }) { call ->
             CallItem(call)
         }
     }
 }
+
+private const val CONTENT_TYPE_SUMMARY = "summary"
+private const val CONTENT_TYPE_CALL = "call"
 
 @Composable
 private fun CallItem(
