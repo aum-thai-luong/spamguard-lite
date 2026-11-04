@@ -14,11 +14,15 @@ class SpamClassifier @Inject constructor(
 
     fun classify(calls: List<CallRecord>, rules: List<BlockRule>): List<ClassifiedCall> {
         val rulesByPriority = rules.sortedBy { it.matchType.priority }
-        return calls.map { call -> ClassifiedCall(call, verdictFor(call, rulesByPriority)) }
+        return calls.map { call -> ClassifiedCall(call, verdictFor(call.number, rulesByPriority)) }
     }
 
-    private fun verdictFor(call: CallRecord, rulesByPriority: List<BlockRule>): SpamVerdict {
-        val number = normalizer.normalize(call.number)
+    /** Phân loại một số (chưa chuẩn hóa), ví dụ số của cuộc gọi đang đổ chuông. */
+    fun classify(rawNumber: String, rules: List<BlockRule>): SpamVerdict =
+        verdictFor(rawNumber, rules.sortedBy { it.matchType.priority })
+
+    private fun verdictFor(rawNumber: String, rulesByPriority: List<BlockRule>): SpamVerdict {
+        val number = normalizer.normalize(rawNumber)
         val matchedRule = rulesByPriority.firstOrNull { rule ->
             rule.matchType.matcher().matches(number, rule.pattern)
         }
