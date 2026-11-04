@@ -21,7 +21,7 @@ internal object ExactMatcher : BlockRuleMatcher {
 
 internal object PrefixMatcher : BlockRuleMatcher {
     override fun matches(normalizedNumber: String, pattern: String): Boolean =
-        normalizedNumber.contains(pattern)
+        normalizedNumber.startsWith(pattern)
 }
 
 internal fun MatchType.matcher(): BlockRuleMatcher = when (this) {

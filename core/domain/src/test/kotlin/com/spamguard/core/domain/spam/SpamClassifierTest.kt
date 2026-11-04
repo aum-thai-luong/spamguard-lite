@@ -47,6 +47,24 @@ class SpamClassifierTest {
     }
 
     @Test
+    fun `prefix rule ignores numbers that only contain the prefix in the middle`() {
+        val rule = aBlockRule(pattern = "0900", matchType = MatchType.PREFIX)
+
+        val result = classifier.classify(listOf(aCallRecord(number = "0919 009 001")), listOf(rule))
+
+        assertEquals(SpamVerdict.Clean, result.single().verdict)
+    }
+
+    @Test
+    fun `prefix rule blocks international numbers starting with the prefix`() {
+        val rule = aBlockRule(pattern = "0900", matchType = MatchType.PREFIX)
+
+        val result = classifier.classify(listOf(aCallRecord(number = "+84900123456")), listOf(rule))
+
+        assertEquals(SpamVerdict.Blocked(rule), result.single().verdict)
+    }
+
+    @Test
     fun `exact rule takes priority over prefix rule`() {
         val prefixRule = aBlockRule(id = 1, pattern = "0900", matchType = MatchType.PREFIX)
         val exactRule = aBlockRule(id = 2, pattern = "0900123456", matchType = MatchType.EXACT)
