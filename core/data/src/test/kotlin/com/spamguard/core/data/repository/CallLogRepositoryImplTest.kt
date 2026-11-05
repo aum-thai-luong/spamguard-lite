@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Duration
@@ -60,9 +61,41 @@ class CallLogRepositoryImplTest {
         assertTrue(error is CallLogUnavailableException)
     }
 
+    @Test
+    fun `getCall maps the matching row`() = runTest {
+        dataSource.entries = listOf(
+            CallLogEntry(3, "0911111111", null, CallLog.Calls.OUTGOING_TYPE, dateEpochMillis = 0, durationSeconds = 65),
+            CallLogEntry(4, "0922222222", "Anh Minh", CallLog.Calls.INCOMING_TYPE, dateEpochMillis = 0, durationSeconds = 0),
+        )
+
+        val call = repository.getCall(id = 4)
+
+        assertEquals("0922222222", call?.number)
+        assertEquals("Anh Minh", call?.contactName)
+        assertEquals(CallType.INCOMING, call?.type)
+    }
+
+    @Test
+    fun `getCall returns null when the call is gone`() = runTest {
+        dataSource.entries = emptyList()
+
+        assertNull(repository.getCall(id = 4))
+    }
+
+    @Test
+    fun `getCall with missing cursor surfaces as CallLogUnavailableException`() = runTest {
+        dataSource.entries = null
+
+        val error = runCatching { repository.getCall(id = 4) }.exceptionOrNull()
+
+        assertTrue(error is CallLogUnavailableException)
+    }
+
     private class StubCallLogDataSource : CallLogDataSource {
         var entries: List<CallLogEntry>? = emptyList()
 
         override fun queryRecentCalls(limit: Int): List<CallLogEntry>? = entries?.take(limit)
+
+        override fun queryCall(id: Long): List<CallLogEntry>? = entries?.filter { it.id == id }
     }
 }

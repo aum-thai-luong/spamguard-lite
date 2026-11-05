@@ -21,4 +21,10 @@ internal class CallLogRepositoryImpl @Inject constructor(
             ?: throw CallLogUnavailableException("Call log provider returned no cursor")
         entries.map(CallLogEntry::toDomain)
     }
+
+    override suspend fun getCall(id: Long): CallRecord? = withContext(ioDispatcher) {
+        val entries = dataSource.queryCall(id)
+            ?: throw CallLogUnavailableException("Call log provider returned no cursor")
+        entries.firstOrNull()?.toDomain()
+    }
 }

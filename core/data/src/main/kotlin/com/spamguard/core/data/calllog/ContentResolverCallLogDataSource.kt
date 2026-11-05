@@ -19,6 +19,11 @@ internal class ContentResolverCallLogDataSource @Inject constructor(
             ?.use { cursor -> cursor.readEntries(limit) }
     }
 
+    override fun queryCall(id: Long): List<CallLogEntry>? =
+        contentResolver
+            .query(CallLog.Calls.CONTENT_URI, PROJECTION, SELECTION_BY_ID, arrayOf(id.toString()), null)
+            ?.use { cursor -> cursor.readEntries(limit = 1) }
+
     /** Vẫn dừng ở [limit]: phòng provider của hãng bỏ qua tham số `limit`. */
     private fun Cursor.readEntries(limit: Int): List<CallLogEntry> {
         val idColumn = getColumnIndexOrThrow(CallLog.Calls._ID)
@@ -54,5 +59,6 @@ internal class ContentResolverCallLogDataSource @Inject constructor(
             CallLog.Calls.DURATION,
         )
         const val SORT_NEWEST_FIRST = "${CallLog.Calls.DATE} DESC"
+        const val SELECTION_BY_ID = "${CallLog.Calls._ID} = ?"
     }
 }

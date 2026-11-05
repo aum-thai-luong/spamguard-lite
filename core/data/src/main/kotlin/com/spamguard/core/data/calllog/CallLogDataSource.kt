@@ -14,4 +14,7 @@ internal data class CallLogEntry(
 internal interface CallLogDataSource {
     /** @return `null` nếu content provider không trả về cursor. */
     fun queryRecentCalls(limit: Int): List<CallLogEntry>?
+
+    /** @return `null` nếu content provider không trả về cursor; danh sách rỗng nếu không có cuộc gọi [id]. */
+    fun queryCall(id: Long): List<CallLogEntry>?
 }
