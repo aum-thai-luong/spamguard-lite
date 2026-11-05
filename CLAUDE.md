@@ -48,6 +48,7 @@ Git Bash dùng `./gradlew`, PowerShell dùng `.\gradlew.bat`.
 
 - Chạy test của mọi module đã sửa (không chỉ build) và `./gradlew lint`, rồi báo kết quả.
 - Nếu đổi màn hình chính, nhắc người dùng sinh lại Baseline Profile.
+- Nếu đã dùng skill trong `.claude/skills/` mà skill sai hoặc lệch repo (template không khớp, phải làm khác hướng dẫn, người dùng sửa lại kết quả do skill gây ra): thêm một mục vào cuối `docs/skill-log.md` theo mẫu ở đầu file, `Chạy lại: chưa`, rồi báo người dùng. Không tự sửa `SKILL.md` khi chưa được yêu cầu.
 
 ## More docs
 
