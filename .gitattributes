@@ -1,0 +1,2 @@
+# Script hook của Claude Code phải giữ LF để chạy được trong Git Bash
+*.sh text eol=lf
