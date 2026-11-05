@@ -11,6 +11,7 @@ import javax.inject.Inject
  * Tìm quy tắc chặn khớp với một số gọi đến, dùng khi sàng lọc cuộc gọi lúc đang đổ chuông.
  *
  * @return quy tắc khớp (ưu tiên quy tắc chính xác), hoặc `null` nếu số không bị chặn.
+ * @throws com.spamguard.core.domain.error.BlockRulesUnavailableException khi không đọc được quy tắc.
  */
 class FindBlockingRuleUseCase @Inject constructor(
     private val repository: BlockRuleRepository,

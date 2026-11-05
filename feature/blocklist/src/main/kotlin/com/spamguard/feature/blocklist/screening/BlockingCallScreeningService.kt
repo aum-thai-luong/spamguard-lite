@@ -3,6 +3,7 @@ package com.spamguard.feature.blocklist.screening
 import android.os.Build
 import android.telecom.Call
 import android.telecom.CallScreeningService
+import com.spamguard.core.domain.error.BlockRulesUnavailableException
 import com.spamguard.core.domain.usecase.FindBlockingRuleUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.MainScope
@@ -34,10 +35,18 @@ class BlockingCallScreeningService : CallScreeningService() {
             return
         }
         scope.launch {
-            // Hệ thống chỉ chờ vài giây; quá hạn thì cho cuộc gọi đi qua thay vì chặn nhầm.
-            val rule = withTimeoutOrNull(LOOKUP_TIMEOUT_MILLIS) { findBlockingRule(number) }
-            respondToCall(callDetails, if (rule != null) REJECT else ALLOW)
+            respondToCall(callDetails, if (shouldReject(number)) REJECT else ALLOW)
         }
+    }
+
+    /**
+     * Không đọc được quy tắc hoặc quá hạn (hệ thống chỉ chờ vài giây) thì cho cuộc gọi đi qua
+     * thay vì chặn nhầm hay để app crash giữa cuộc gọi. Lỗi khác vẫn lộ ra.
+     */
+    private suspend fun shouldReject(number: String): Boolean = try {
+        withTimeoutOrNull(LOOKUP_TIMEOUT_MILLIS) { findBlockingRule(number) } != null
+    } catch (@Suppress("UNUSED_PARAMETER") e: BlockRulesUnavailableException) {
+        false
     }
 
     override fun onDestroy() {

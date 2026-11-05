@@ -1,12 +1,18 @@
 package com.spamguard.core.domain.usecase
 
+import com.spamguard.core.domain.error.BlockRulesUnavailableException
+import com.spamguard.core.domain.model.BlockRule
 import com.spamguard.core.domain.model.MatchType
 import com.spamguard.core.domain.phone.PhoneNumberNormalizer
+import com.spamguard.core.domain.repository.BlockRuleRepository
 import com.spamguard.core.domain.spam.SpamClassifier
 import com.spamguard.core.testing.FakeBlockRuleRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FindBlockingRuleUseCaseTest {
@@ -43,6 +49,22 @@ class FindBlockingRuleUseCaseTest {
         val rule = findBlockingRule("0900123456")
 
         assertEquals(MatchType.EXACT, rule?.matchType)
+    }
+
+    @Test
+    fun `unreadable rules surface as BlockRulesUnavailableException`() = runTest {
+        val failingRepository = object : BlockRuleRepository {
+            override fun observeRules(): Flow<List<BlockRule>> =
+                flow { throw BlockRulesUnavailableException("db error") }
+            override suspend fun addRule(pattern: String, matchType: MatchType): Long = error("not used")
+            override suspend fun removeRule(ruleId: Long) = error("not used")
+            override suspend fun exists(pattern: String, matchType: MatchType): Boolean = error("not used")
+        }
+        val useCase = FindBlockingRuleUseCase(failingRepository, SpamClassifier(PhoneNumberNormalizer()))
+
+        val error = runCatching { useCase("0900123456") }.exceptionOrNull()
+
+        assertTrue(error is BlockRulesUnavailableException)
     }
 
     @Test
