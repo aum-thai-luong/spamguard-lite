@@ -36,6 +36,7 @@ class CallLogScreenTest {
     private var requestPermissionClicks = 0
     private var openSettingsClicks = 0
     private var retryClicks = 0
+    private var clickedCallId: Long? = null
 
     @Before
     fun setUp() {
@@ -47,6 +48,7 @@ class CallLogScreenTest {
                     onOpenSettings = { openSettingsClicks++ },
                     onRetry = { retryClicks++ },
                     onRefresh = {},
+                    onCallClick = { clickedCallId = it },
                 )
             }
         }
@@ -116,6 +118,18 @@ class CallLogScreenTest {
         uiState = CallLogUiState.Content(calls = listOf(aCallUiModel(title = null)), blockedCount = 0)
 
         composeRule.onNodeWithText(text(R.string.call_log_private_number)).assertIsDisplayed()
+    }
+
+    @Test
+    fun `clicking a call opens its detail`() {
+        uiState = CallLogUiState.Content(
+            calls = listOf(aCallUiModel(id = 1, title = "0911111111"), aCallUiModel(id = 2, title = "0922222222")),
+            blockedCount = 0,
+        )
+
+        composeRule.onNodeWithText("0922222222").performClick()
+
+        assertEquals(2L, clickedCallId)
     }
 
     private fun text(@StringRes res: Int): String = context.getString(res)

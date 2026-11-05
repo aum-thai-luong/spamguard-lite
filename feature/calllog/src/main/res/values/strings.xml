@@ -21,4 +21,31 @@
     <string name="call_log_type_rejected">Cuộc gọi bị từ chối</string>
     <string name="call_log_type_blocked">Cuộc gọi bị hệ thống chặn</string>
     <string name="call_log_type_unknown">Cuộc gọi</string>
+
+    <!-- Màn hình chi tiết cuộc gọi -->
+    <string name="call_log_detail_label_type">Loại cuộc gọi</string>
+    <string name="call_log_detail_label_time">Thời điểm</string>
+    <string name="call_log_detail_label_duration">Thời lượng</string>
+    <string name="call_log_detail_not_connected">Không kết nối</string>
+    <string name="call_log_detail_not_found">Cuộc gọi này không còn trong nhật ký.</string>
+    <string name="call_log_detail_blocked_by_prefix">Bị chặn theo quy tắc đầu số %1$s</string>
+    <string name="call_log_detail_blocked_by_exact">Bị chặn theo quy tắc đúng số %1$s</string>
+
+    <string name="call_log_detail_action_call">Gọi lại</string>
+    <string name="call_log_detail_action_copy">Sao chép số</string>
+    <string name="call_log_detail_action_block">Chặn số này</string>
+    <string name="call_log_detail_action_unblock">Bỏ chặn</string>
+    <string name="call_log_detail_action_cancel">Hủy</string>
+
+    <string name="call_log_detail_unblock_title">Bỏ chặn?</string>
+    <string name="call_log_detail_unblock_message_exact">Các cuộc gọi từ %1$s sẽ không còn bị chặn hay đánh dấu spam.</string>
+    <string name="call_log_detail_unblock_message_prefix">Mọi số bắt đầu bằng %1$s sẽ không còn bị chặn hay đánh dấu spam, không riêng số này.</string>
+
+    <string name="call_log_detail_message_blocked">Đã chặn số này.</string>
+    <string name="call_log_detail_message_duplicate">Số này đã có trong danh sách chặn.</string>
+    <string name="call_log_detail_message_invalid">Không chặn được số này.</string>
+    <string name="call_log_detail_message_unblocked">Đã bỏ chặn.</string>
+    <string name="call_log_detail_message_copied">Đã sao chép số.</string>
+    <string name="call_log_detail_message_no_dialer">Không tìm thấy ứng dụng gọi điện.</string>
+    <string name="call_log_detail_clip_label">Số điện thoại</string>
 </resources>

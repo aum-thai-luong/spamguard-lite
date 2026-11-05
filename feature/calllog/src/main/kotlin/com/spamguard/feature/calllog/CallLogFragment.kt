@@ -15,7 +15,9 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.spamguard.core.ui.theme.SpamGuardTheme
+import com.spamguard.feature.calllog.detail.callDetailRequest
 import dagger.hilt.android.AndroidEntryPoint
 
 /** Giữ chỗ trong Navigation và xin quyền hệ thống; giao diện vẽ bằng [CallLogScreen]. */
@@ -44,6 +46,7 @@ class CallLogFragment : Fragment() {
                     viewModel = viewModel,
                     onRequestPermission = ::requestCallLogPermission,
                     onOpenSettings = ::openAppSettings,
+                    onCallClick = ::openCallDetail,
                 )
             }
         }
@@ -67,6 +70,10 @@ class CallLogFragment : Fragment() {
 
     private fun requestCallLogPermission() {
         permissionLauncher.launch(Manifest.permission.READ_CALL_LOG)
+    }
+
+    private fun openCallDetail(callId: Long) {
+        findNavController().navigate(callDetailRequest(callId))
     }
 
     private fun openAppSettings() {

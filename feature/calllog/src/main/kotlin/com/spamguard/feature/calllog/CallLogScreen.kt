@@ -2,6 +2,7 @@ package com.spamguard.feature.calllog
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,7 @@ internal fun CallLogRoute(
     viewModel: CallLogViewModel,
     onRequestPermission: () -> Unit,
     onOpenSettings: () -> Unit,
+    onCallClick: (callId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -59,6 +61,7 @@ internal fun CallLogRoute(
         onOpenSettings = onOpenSettings,
         onRetry = viewModel::onRetry,
         onRefresh = viewModel::onRefresh,
+        onCallClick = onCallClick,
         // Lộ testTag thành resource-id để UiAutomator (Baseline Profile, macrobenchmark) tìm được.
         modifier = modifier.semantics { testTagsAsResourceId = true },
     )
@@ -73,6 +76,7 @@ internal fun CallLogScreen(
     onOpenSettings: () -> Unit,
     onRetry: () -> Unit,
     onRefresh: () -> Unit,
+    onCallClick: (callId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (uiState) {
@@ -122,7 +126,7 @@ internal fun CallLogScreen(
             onRefresh = onRefresh,
             modifier = modifier.fillMaxSize(),
         ) {
-            CallList(calls = uiState.calls, blockedCount = uiState.blockedCount)
+            CallList(calls = uiState.calls, blockedCount = uiState.blockedCount, onCallClick = onCallClick)
         }
     }
 }
@@ -131,6 +135,7 @@ internal fun CallLogScreen(
 private fun CallList(
     calls: List<CallUiModel>,
     blockedCount: Int,
+    onCallClick: (callId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -148,7 +153,7 @@ private fun CallList(
             )
         }
         items(calls, key = CallUiModel::id, contentType = { CONTENT_TYPE_CALL }) { call ->
-            CallItem(call)
+            CallItem(call, onClick = { onCallClick(call.id) })
         }
     }
 }
@@ -162,12 +167,14 @@ private const val CONTENT_TYPE_CALL = "call"
 @Composable
 private fun CallItem(
     call: CallUiModel,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .heightIn(min = 72.dp)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
@@ -213,8 +220,9 @@ private fun CallItem(
     }
 }
 
+/** Thông điệp giữa màn hình kèm nút hành động tùy chọn; màn hình chi tiết dùng lại. */
 @Composable
-private fun MessageState(
+internal fun MessageState(
     @StringRes messageRes: Int,
     modifier: Modifier = Modifier,
     @StringRes actionRes: Int? = null,
@@ -279,6 +287,7 @@ private fun CallLogScreenPreview(uiState: CallLogUiState) {
                 onOpenSettings = {},
                 onRetry = {},
                 onRefresh = {},
+                onCallClick = {},
             )
         }
     }

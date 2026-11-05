@@ -1,8 +1,5 @@
 package com.spamguard.feature.calllog
 
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
-import com.spamguard.core.domain.model.CallType
 import com.spamguard.core.domain.model.ClassifiedCall
 import com.spamguard.core.domain.model.SpamVerdict
 import com.spamguard.feature.calllog.model.CallUiModel
@@ -41,25 +38,8 @@ class CallUiMapper @Inject constructor(
         )
     }
 
-    @DrawableRes
-    private fun CallType.iconRes(): Int = when (this) {
-        CallType.INCOMING, CallType.UNKNOWN -> R.drawable.ic_call_incoming
-        CallType.OUTGOING -> R.drawable.ic_call_outgoing
-        CallType.MISSED, CallType.REJECTED -> R.drawable.ic_call_missed
-        CallType.BLOCKED -> R.drawable.ic_call_blocked
-    }
-
-    @StringRes
-    private fun CallType.labelRes(): Int = when (this) {
-        CallType.INCOMING -> R.string.call_log_type_incoming
-        CallType.OUTGOING -> R.string.call_log_type_outgoing
-        CallType.MISSED -> R.string.call_log_type_missed
-        CallType.REJECTED -> R.string.call_log_type_rejected
-        CallType.BLOCKED -> R.string.call_log_type_blocked
-        CallType.UNKNOWN -> R.string.call_log_type_unknown
-    }
-
-    private companion object {
+    internal companion object {
+        /** Dùng chung với màn hình chi tiết để thời gian hiển thị giống nhau. */
         const val TIME_PATTERN = "HH:mm · dd/MM/yyyy"
     }
 }

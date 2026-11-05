@@ -48,6 +48,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // Điều hướng sang màn chi tiết bằng deep link; ConfirmUnblockDialogFragment dùng MaterialAlertDialogBuilder.
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.material)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -62,10 +65,12 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.androidx.fragment.testing)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     // Activity rỗng cho test: chỉ cần ở test JVM (Robolectric), không gộp vào APK debug.
     testImplementation(libs.androidx.compose.ui.test.manifest)
+    testImplementation(libs.androidx.fragment.testing.manifest)
 }
 
 // Giống :feature:blocklist: Gradle tải jar android-all, Robolectric chạy offline và đọc jar từ
