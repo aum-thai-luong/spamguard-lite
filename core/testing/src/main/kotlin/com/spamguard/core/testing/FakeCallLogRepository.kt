@@ -14,4 +14,9 @@ class FakeCallLogRepository : CallLogRepository {
         failure?.let { throw it }
         return calls.take(limit)
     }
+
+    override suspend fun getCall(id: Long): CallRecord? {
+        failure?.let { throw it }
+        return calls.find { it.id == id }
+    }
 }

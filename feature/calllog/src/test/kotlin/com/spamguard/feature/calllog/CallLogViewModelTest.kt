@@ -211,5 +211,7 @@ class CallLogViewModelTest {
             gate?.await()
             return calls.take(limit)
         }
+
+        override suspend fun getCall(id: Long): CallRecord? = calls.find { it.id == id }
     }
 }
