@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)"
+    ],
+    "ask": [
+      "Bash(./gradlew *install*)",
+      "Bash(./gradlew *connected*)",
+      "Bash(./gradlew *BaselineProfile*)",
+      "Bash(git reset --hard:*)",
+      "Read(./local.properties)",
+      "Edit(./BUGS.md)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git clean:*)",
+      "Bash(rm -rf:*)",
+      "Read(./keystore.properties)",
+      "Read(./**/*.jks)",
+      "Read(./**/*.keystore)",
+      "Read(./**/google-services.json)",
+      "Edit(./core/data/schemas/**)",
+      "Edit(./app/src/release/generated/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/arch-guard.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
