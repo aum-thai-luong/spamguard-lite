@@ -1,5 +1,6 @@
 package com.spamguard.feature.calllog
 
+import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -269,19 +271,27 @@ private val previewCalls = listOf(
 @Composable
 private fun CallLogScreenPreview(uiState: CallLogUiState) {
     SpamGuardTheme {
-        CallLogScreen(
-            uiState = uiState,
-            onRequestPermission = {},
-            onOpenSettings = {},
-            onRetry = {},
-            onRefresh = {},
-        )
+        // Surface tô nền theo theme để Preview tối không bị nền trắng của showBackground.
+        Surface {
+            CallLogScreen(
+                uiState = uiState,
+                onRequestPermission = {},
+                onOpenSettings = {},
+                onRetry = {},
+                onRefresh = {},
+            )
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun ContentPreview() =
+    CallLogScreenPreview(CallLogUiState.Content(calls = previewCalls, blockedCount = 1))
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ContentDarkPreview() =
     CallLogScreenPreview(CallLogUiState.Content(calls = previewCalls, blockedCount = 1))
 
 @Preview(showBackground = true)
