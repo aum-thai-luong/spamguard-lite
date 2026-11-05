@@ -21,7 +21,7 @@ App Android mẫu của khóa AI-Assisted Android Development: đọc nhật ký
 - Không sửa tay `core/data/schemas/` (Room sinh ra, phải commit) và `app/src/release/generated/`.
 - Giữ ổn định testTag `call_log_list` và menu id `blocklistFragment`; `:baselineprofile` tìm UI bằng chúng.
 - Không thêm hay nâng dependency khi chưa hỏi; phiên bản ghim trong `gradle/libs.versions.toml`.
-- Trả lời người dùng, viết docs, comment và commit bằng tiếng Việt. Commit theo conventional, ví dụ `fix(calllog): sửa so khớp đầu số khi số có mã quốc gia`.
+- Trả lời người dùng, viết docs, comment và commit bằng tiếng Việt. Commit theo dạng `<loại> phạm vi: mô tả`, loại đặt trong ngoặc nhọn (`feat`, `fix`, `refactor`, `test`, `perf`, `docs`, `build`, `chore`), ví dụ `<fix> calllog: sửa so khớp đầu số khi số có mã quốc gia`. Commit sửa bug Lab 2 ghi thêm mã bug: `<fix> BUG-2 domain: ...`.
 
 ## Commands
 
