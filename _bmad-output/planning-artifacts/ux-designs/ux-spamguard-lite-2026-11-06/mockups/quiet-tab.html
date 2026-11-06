@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock: Tab Yên tĩnh</title>
+<style>
+/* Tuân theo: EXPERIENCE.md > Information Architecture, Component Patterns (Thẻ trạng thái, Nút yên tĩnh 1 giờ,
+   Dòng khung giờ, Dòng số quan trọng, Dòng gợi ý), State Patterns (Đang yên tĩnh, Chưa có vai trò sàng lọc);
+   DESIGN.md > Colors, Components. Màu xấp xỉ bảng M3 sinh từ brand-primary #006A60 (máy không có Dynamic Color).
+   Spine thắng nếu mâu thuẫn với mock. Dữ liệu là giả. */
+:root{--primary:#006A60;--on-primary:#fff;--surface:#F4FBF8;--on-surface:#161D1C;--muted:#3F4947;
+--sec-cont:#CCE8E3;--on-sec-cont:#051F1C;--idle:#E3EAE7;--banner:#DDE4E1;--outline:#BEC9C6;--tertiary:#456179;
+--switch-on:#006A60;--switch-off:#6F7977;--nav:#E9EFEC;--nav-ind:#CCE8E3}
+.dark{--primary:#53DBC9;--on-primary:#003731;--surface:#0E1513;--on-surface:#DDE4E1;--muted:#BEC9C6;
+--sec-cont:#334B47;--on-sec-cont:#CCE8E3;--idle:#242B2A;--banner:#2E3634;--outline:#3F4947;--tertiary:#ADCAE5;
+--switch-on:#53DBC9;--switch-off:#899391;--nav:#1A2120;--nav-ind:#334B47}
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#888;font-family:system-ui,Roboto,sans-serif;display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
+figure{margin:0}figcaption{color:#fff;font-size:13px;margin-bottom:8px;max-width:360px}
+.phone{width:360px;height:760px;border-radius:28px;overflow:hidden;background:var(--surface);color:var(--on-surface);display:flex;flex-direction:column;border:8px solid #111}
+.bar{height:56px;display:flex;align-items:center;padding:0 16px;font-size:22px}
+.content{flex:1;overflow:hidden;padding:0 16px}
+.card{border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.card.active{background:var(--sec-cont);color:var(--on-sec-cont)}.card.idle{background:var(--idle)}
+.card .title{font-size:22px;display:flex;gap:8px;align-items:center}.card .detail{font-size:14px}
+.btn{border:0;border-radius:20px;height:40px;padding:0 24px;font-size:14px;font-weight:500;align-self:flex-start;margin-top:8px}
+.tonal{background:var(--on-sec-cont);color:var(--sec-cont)}.idle .tonal{background:var(--sec-cont);color:var(--on-sec-cont)}
+.banner{background:var(--banner);border-radius:12px;padding:16px;font-size:14px}.banner .act{color:var(--primary);font-weight:500;margin-top:8px;display:block}
+h3{color:var(--primary);font-size:14px;font-weight:500;margin:24px 0 4px}
+.row{min-height:72px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--outline)}
+.row .main{flex:1}.row .t{font-size:16px}.row .m{font-size:14px;color:var(--muted)}
+.sw{width:52px;height:32px;border-radius:16px;position:relative;flex:none}
+.sw.on{background:var(--switch-on)}.sw.off{border:2px solid var(--switch-off)}
+.sw::after{content:"";position:absolute;top:50%;transform:translateY(-50%);border-radius:50%}
+.sw.on::after{right:4px;width:24px;height:24px;background:var(--on-primary)}.sw.off::after{left:6px;width:16px;height:16px;background:var(--switch-off)}
+.icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);flex:none}
+.add{color:var(--primary);font-size:14px;font-weight:500;padding:14px 0;display:block}
+.nav{height:80px;background:var(--nav);display:flex}.nav div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px}
+.nav span{width:56px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.nav .sel span{background:var(--nav-ind)}.nav .sel{font-weight:600}
+</style>
+</head>
+<body>
+
+<figure>
+<figcaption>Tab Yên tĩnh, đang yên tĩnh lúc 22:15 (giao diện sáng): thẻ trạng thái màu secondaryContainer, có khung giờ, số quan trọng và gợi ý.</figcaption>
+<div class="phone">
+  <div class="bar">SpamGuard Lite</div>
+  <div class="content">
+    <div class="card active" aria-live="polite">
+      <div class="title">☾ Đang yên tĩnh đến 07:00</div>
+      <div class="detail">Chỉ số quan trọng mới đổ chuông.</div>
+      <button class="btn tonal">Yên tĩnh trong 1 giờ</button>
+    </div>
+    <h3>Khung giờ</h3>
+    <div class="row"><div class="main"><div class="t">21:00 – 07:00</div><div class="m">Hằng ngày</div></div><div class="sw on" role="switch" aria-checked="true" aria-label="Khung giờ 21:00 đến 07:00, hằng ngày, đang bật"></div></div>
+    <div class="row"><div class="main"><div class="t">14:00 – 15:00</div><div class="m">T2</div></div><div class="sw off" role="switch" aria-checked="false"></div></div>
+    <span class="add">+ Thêm khung giờ</span>
+    <h3>Số quan trọng</h3>
+    <div class="row"><div class="main"><div class="t">0912345678</div></div><div class="icon" aria-label="Xóa số quan trọng 0912345678">🗑</div></div>
+    <div class="row"><div class="main"><div class="t">0987000111</div></div><div class="icon" aria-label="Xóa số quan trọng 0987000111">🗑</div></div>
+    <span class="add">+ Thêm số</span>
+    <h3>Gợi ý</h3>
+    <div class="row"><div class="main"><div class="t">0933222111</div><div class="m">8 cuộc gọi trong 30 ngày</div></div><div class="icon" aria-label="Thêm số quan trọng 0933222111">＋</div></div>
+  </div>
+  <div class="nav"><div><span>☏</span>Cuộc gọi</div><div><span>⦸</span>Danh sách chặn</div><div class="sel"><span>☾</span>Yên tĩnh</div></div>
+</div>
+</figure>
+
+<figure>
+<figcaption>Cùng trạng thái ở giao diện tối (màu brand_* tối, #53DBC9).</figcaption>
+<div class="phone dark">
+  <div class="bar">SpamGuard Lite</div>
+  <div class="content">
+    <div class="card active">
+      <div class="title">☾ Đang yên tĩnh đến 07:00</div>
+      <div class="detail">Chỉ số quan trọng mới đổ chuông.</div>
+      <button class="btn tonal">Yên tĩnh trong 1 giờ</button>
+    </div>
+    <h3>Khung giờ</h3>
+    <div class="row"><div class="main"><div class="t">21:00 – 07:00</div><div class="m">Hằng ngày</div></div><div class="sw on"></div></div>
+    <div class="row"><div class="main"><div class="t">14:00 – 15:00</div><div class="m">T2</div></div><div class="sw off"></div></div>
+    <span class="add">+ Thêm khung giờ</span>
+    <h3>Số quan trọng</h3>
+    <div class="row"><div class="main"><div class="t">0912345678</div></div><div class="icon">🗑</div></div>
+    <div class="row"><div class="main"><div class="t">0987000111</div></div><div class="icon">🗑</div></div>
+    <span class="add">+ Thêm số</span>
+  </div>
+  <div class="nav"><div><span>☏</span>Cuộc gọi</div><div><span>⦸</span>Danh sách chặn</div><div class="sel"><span>☾</span>Yên tĩnh</div></div>
+</div>
+</figure>
+
+<figure>
+<figcaption>Trạng thái chưa có vai trò sàng lọc: banner trung tính (không dùng màu đỏ) thay chỗ thẻ trạng thái; vẫn cấu hình được. Danh sách quan trọng rỗng thì có câu cảnh báo hệ quả.</figcaption>
+<div class="phone">
+  <div class="bar">SpamGuard Lite</div>
+  <div class="content">
+    <div class="banner">Giờ yên tĩnh chưa hoạt động. Cho phép SpamGuard sàng lọc cuộc gọi.<span class="act">Cho phép</span></div>
+    <h3>Khung giờ</h3>
+    <div class="row"><div class="main"><div class="m">Chưa có khung giờ nào.</div></div></div>
+    <span class="add">+ Thêm khung giờ</span>
+    <h3>Số quan trọng</h3>
+    <div class="row"><div class="main"><div class="m">Chưa có số quan trọng. Khi đang yên tĩnh, mọi cuộc gọi sẽ im lặng.</div></div></div>
+    <span class="add">+ Thêm số</span>
+    <h3>Gợi ý</h3>
+    <div class="row"><div class="main"><div class="t">0912345678</div><div class="m">12 cuộc gọi trong 30 ngày</div></div><div class="icon">＋</div></div>
+    <div class="row"><div class="main"><div class="t">0987000111</div><div class="m">6 cuộc gọi trong 30 ngày</div></div><div class="icon">＋</div></div>
+  </div>
+  <div class="nav"><div><span>☏</span>Cuộc gọi</div><div><span>⦸</span>Danh sách chặn</div><div class="sel"><span>☾</span>Yên tĩnh</div></div>
+</div>
+</figure>
+
+</body>
+</html>

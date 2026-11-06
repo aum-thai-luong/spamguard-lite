@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock: Sửa khung giờ</title>
+<style>
+/* Tuân theo: EXPERIENCE.md > Component Patterns (Sửa khung giờ, Chip ngày, Nút "Thêm khung giờ"),
+   Interaction Primitives; DESIGN.md > Components (Chip chọn ngày). Màu xấp xỉ M3 từ #006A60.
+   Spine thắng nếu mâu thuẫn với mock. */
+:root{--primary:#006A60;--on-primary:#fff;--surface:#F4FBF8;--on-surface:#161D1C;--muted:#3F4947;--outline:#6F7977;
+--chip-sel:#CCE8E3;--on-chip-sel:#051F1C;--error:#BA1A1A;--disabled:#1D1B201F;--on-disabled:#1D1B2061}
+*{box-sizing:border-box}body{margin:0;padding:24px;background:#888;font-family:system-ui,Roboto,sans-serif;display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
+figure{margin:0}figcaption{color:#fff;font-size:13px;margin-bottom:8px;max-width:360px}
+.phone{width:360px;height:760px;border-radius:28px;overflow:hidden;background:var(--surface);color:var(--on-surface);display:flex;flex-direction:column;border:8px solid #111}
+.bar{height:64px;display:flex;align-items:center;gap:16px;padding:0 16px;font-size:22px}
+.content{flex:1;padding:8px 16px;display:flex;flex-direction:column;gap:16px}
+.times{display:flex;gap:12px}.field{flex:1;border:1px solid var(--outline);border-radius:4px;padding:8px 16px}
+.field .l{font-size:12px;color:var(--muted)}.field .v{font-size:28px}
+.label{font-size:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{height:32px;padding:0 14px;border-radius:8px;border:1px solid var(--outline);display:flex;align-items:center;font-size:14px}
+.chip.sel{background:var(--chip-sel);color:var(--on-chip-sel);border-color:transparent}.chip.sel::before{content:"✓ ";}
+.err{color:var(--error);font-size:12px;margin-top:-8px}
+.spacer{flex:1}.save{height:40px;border-radius:20px;border:0;background:var(--primary);color:var(--on-primary);font-size:14px;font-weight:500}
+.save:disabled{background:var(--disabled);color:var(--on-disabled)}
+.del{color:var(--primary);font-size:14px;font-weight:500;text-align:center;padding:10px}
+</style>
+</head>
+<body>
+
+<figure>
+<figcaption>Sửa khung giờ, hợp lệ: 21:00–07:00, "Hằng ngày" ở trạng thái đã chọn vì tập ngày khớp lối tắt. Đang sửa nên có "Xóa khung giờ".</figcaption>
+<div class="phone">
+  <div class="bar">← Sửa khung giờ</div>
+  <div class="content">
+    <div class="times">
+      <div class="field"><div class="l">Bắt đầu</div><div class="v">21:00</div></div>
+      <div class="field"><div class="l">Kết thúc</div><div class="v">07:00</div></div>
+    </div>
+    <div class="label">Ngày áp dụng</div>
+    <div class="chips"><div class="chip sel">Hằng ngày</div><div class="chip">Thứ 2–6</div></div>
+    <div class="chips" role="group" aria-label="Ngày trong tuần">
+      <div class="chip sel" aria-label="Thứ Hai, đã chọn">T2</div><div class="chip sel">T3</div><div class="chip sel">T4</div><div class="chip sel">T5</div>
+      <div class="chip sel">T6</div><div class="chip sel">T7</div><div class="chip sel">CN</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="save">Lưu</button>
+    <div class="del">Xóa khung giờ</div>
+  </div>
+</div>
+</figure>
+
+<figure>
+<figcaption>Lỗi kiểm tra: bỏ chọn hết ngày, lỗi hiện ngay dưới hàng chip và nút Lưu bị vô hiệu (Component Patterns: Sửa khung giờ).</figcaption>
+<div class="phone">
+  <div class="bar">← Sửa khung giờ</div>
+  <div class="content">
+    <div class="times">
+      <div class="field"><div class="l">Bắt đầu</div><div class="v">14:00</div></div>
+      <div class="field"><div class="l">Kết thúc</div><div class="v">15:00</div></div>
+    </div>
+    <div class="label">Ngày áp dụng</div>
+    <div class="chips"><div class="chip">Hằng ngày</div><div class="chip">Thứ 2–6</div></div>
+    <div class="chips">
+      <div class="chip">T2</div><div class="chip">T3</div><div class="chip">T4</div><div class="chip">T5</div>
+      <div class="chip">T6</div><div class="chip">T7</div><div class="chip">CN</div>
+    </div>
+    <div class="err">Chọn ít nhất một ngày.</div>
+    <div class="spacer"></div>
+    <button class="save" disabled>Lưu</button>
+  </div>
+</div>
+</figure>
+
+</body>
+</html>
