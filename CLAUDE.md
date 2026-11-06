@@ -20,7 +20,7 @@ App Android mẫu của khóa AI-Assisted Android Development: đọc nhật ký
 - Luôn inject `Clock`, `ZoneId`, `CoroutineDispatcher`; không gọi trực tiếp `System.currentTimeMillis()`, `LocalDateTime.now()`, `Dispatchers.IO`.
 - Chuỗi hiển thị nằm trong `strings.xml`, tiền tố theo module (`call_log_*`, `blocklist_*`).
 - Không log số điện thoại hay tên danh bạ. Test và Preview chỉ dùng dữ liệu giả.
-- Test dùng fake và `TestData` trong `:core:testing`; không mock repository.
+- Test dùng fake và các builder `aXxx()` trong `core/testing/.../TestData.kt` (ví dụ `aCallRecord()`); cần dữ liệu mẫu mới thì thêm builder vào file đó, không tạo `object TestData` hay helper riêng trong module test. Không mock repository.
 - Chuẩn hóa số bằng `PhoneNumberNormalizer` trước khi so khớp (`+84 900-123-456` → `0900123456`); pattern quy tắc lưu ở dạng đã chuẩn hóa.
 - Không sửa tay `core/data/schemas/` (Room sinh ra, phải commit) và `app/src/release/generated/`.
 - Giữ ổn định testTag `call_log_list` và menu id `blocklistFragment`; `:baselineprofile` tìm UI bằng chúng.
