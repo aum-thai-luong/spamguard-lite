@@ -5,3 +5,22 @@
 #
 # [agents.bmad-agent-pm]
 # description = "Prefers short, bulleted PRDs over narrative drafts."
+
+# Tên agent theo khóa học AUM. Danh sách agent (party-mode, bmad-help) lấy tên từ đây.
+# Tên agent tự xưng nằm cứng trong .claude/skills/bmad-agent-*/SKILL.md và customize.toml:
+# sau mỗi lần chạy `npx bmad-method install` / update phải đổi lại tên ở các file đó.
+
+[agents.bmad-agent-analyst]
+name = "AUM BA"
+
+[agents.bmad-agent-pm]
+name = "AUM PM"
+
+[agents.bmad-agent-ux-designer]
+name = "AUM UXDesign"
+
+[agents.bmad-agent-architect]
+name = "AUM SA"
+
+[agents.bmad-agent-dev]
+name = "AUM Dev"

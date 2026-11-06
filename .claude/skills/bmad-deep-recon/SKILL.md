@@ -35,7 +35,7 @@ Three services, freely combined — each detailed in its reference: **Draft** a 
 
 ## On Activation
 
-**Forwarded activation:** if a caller invoked you with a stated intent, research type, or pre-resolved customization fields (the legacy research shims and Mary's menu do), honor them verbatim — skip your own inference for those values and resolve only the rest.
+**Forwarded activation:** if a caller invoked you with a stated intent, research type, or pre-resolved customization fields (the legacy research shims and AUM BA's menu do), honor them verbatim — skip your own inference for those values and resolve only the rest.
 
 1. Resolve customization: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow` (on failure read `{skill-root}/customize.toml`, use defaults). Run `{workflow.activation_steps_prepend}`, then `{workflow.activation_steps_append}`.
 2. Resolve config: `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root}`. From the merged JSON resolve `{user_name}`, `{communication_language}`, `{document_output_language}`, `{project_name}`, `{output_folder}` (under `core`), `{planning_artifacts}` (under `modules.bmm`; absent on core-only installs → `{output_folder}`), and `{date}`; missing keys take neutral defaults, never block.
