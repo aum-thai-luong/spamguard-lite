@@ -6,6 +6,10 @@ App Android mẫu của khóa AI-Assisted Android Development: đọc nhật ký
 
 @docs/ARCHITECTURE.md
 
+## BMAD
+
+@AGENTS.md
+
 ## Mandatory rules
 
 - IMPORTANT: repo **cố ý chứa 3 bug** cho Lab 2 (`BUGS.md`). Không bao giờ sửa chúng khi đang làm việc khác. Khi được giao sửa: viết test fail trước → giải thích nguyên nhân gốc → sửa tối thiểu → mỗi bug một commit.
