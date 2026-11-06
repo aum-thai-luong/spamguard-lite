@@ -86,6 +86,8 @@ context: []
 - `combinedClickable` vẫn là experimental ở Compose BOM 2024.12.01, nên cần `@OptIn(ExperimentalFoundationApi::class)` trên `CallItem`.
 - Điều bất ngờ: vì `stateIn` chạy ngay trong constructor, `CallLogViewModelTest` phải tạo ViewModel `by lazy` (field initializer chạy trước `MainDispatcherRule.starting`).
 - Kết quả: `:feature:calllog:testDebugUnitTest` có 71 test, xanh hết; `lint` không lỗi; module calllog không có cảnh báo; app vẫn 77 cảnh báo như trước khi sửa.
+- Sau review (bmad-build bước 4): `CallItem` luôn truyền `onLongClick`, còn khi `!canBlock` thì không làm gì và không gắn `onLongClickLabel`, để thả tay sau khi nhấn giữ không mở màn chi tiết. Đã có 72 test, xanh hết.
+- Quyết định của người dùng sau `android-review` (2026-11-06): chọn phương án (b), giữ hành vi trên. Dòng số ẩn hoặc đã bị chặn: nhấn giữ không làm gì, đúng như ma trận I/O. Đánh đổi được chấp nhận: TalkBack vẫn có thể đọc hành động nhấn giữ (không có nhãn) ở các dòng này. Phương án (a) bị loại là truyền `onLongClick = null`: semantics sạch nhưng giữ lâu rồi thả sẽ mở chi tiết. Hành vi TalkBack chưa kiểm trên máy thật.
 
 ## Spec Change Log
 
