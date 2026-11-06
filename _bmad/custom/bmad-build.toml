@@ -1,0 +1,7 @@
+# Ghi đè cho bmad-build (installer không đụng vào file này).
+# persistent_facts được nạp khi skill kích hoạt, cộng thêm vào mặc định.
+
+[workflow]
+persistent_facts = [
+  "Commit message must follow CLAUDE.md, not conventional commits: `<type> scope: mô tả` in Vietnamese, type in angle brackets (feat, fix, refactor, test, perf, docs, build, chore), e.g. `<feat> calllog: chặn số khi nhấn giữ cuộc gọi`. Never write `feat(scope): ...`.",
+]
