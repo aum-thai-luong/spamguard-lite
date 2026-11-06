@@ -1,5 +1,6 @@
 package com.spamguard.feature.calllog
 
+import androidx.annotation.StringRes
 import com.spamguard.feature.calllog.model.CallUiModel
 
 sealed interface CallLogUiState {
@@ -22,5 +23,7 @@ sealed interface CallLogUiState {
         val calls: List<CallUiModel>,
         val blockedCount: Int,
         val isRefreshing: Boolean = false,
+        /** Thông báo một lần (snackbar); UI gọi `onUserMessageShown()` sau khi hiển thị. */
+        @StringRes val userMessageRes: Int? = null,
     ) : CallLogUiState
 }

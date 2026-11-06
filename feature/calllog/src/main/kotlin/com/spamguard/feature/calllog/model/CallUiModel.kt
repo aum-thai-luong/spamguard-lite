@@ -10,6 +10,8 @@ data class CallUiModel(
     val title: String?,
     /** Số điện thoại, chỉ có khi [title] là tên danh bạ. */
     val subtitle: String?,
+    /** Số dùng để chặn; `null` với số ẩn. */
+    val number: String?,
     val timeText: String,
     @DrawableRes val typeIconRes: Int,
     @StringRes val typeLabelRes: Int,
@@ -17,4 +19,7 @@ data class CallUiModel(
     val blockedPattern: String?,
 ) {
     val isBlocked: Boolean get() = blockedPattern != null
+
+    /** Nhấn giữ để chặn chỉ có với số không ẩn và chưa bị chặn, giống màn chi tiết. */
+    val canBlock: Boolean get() = number != null && !isBlocked
 }

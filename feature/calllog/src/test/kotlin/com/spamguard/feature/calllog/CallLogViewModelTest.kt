@@ -6,15 +6,18 @@ import com.spamguard.core.domain.model.MatchType
 import com.spamguard.core.domain.phone.PhoneNumberNormalizer
 import com.spamguard.core.domain.repository.CallLogRepository
 import com.spamguard.core.domain.spam.SpamClassifier
+import com.spamguard.core.domain.usecase.AddBlockRuleUseCase
 import com.spamguard.core.domain.usecase.GetClassifiedCallsUseCase
 import com.spamguard.core.testing.FakeBlockRuleRepository
 import com.spamguard.core.testing.FakeCallLogRepository
 import com.spamguard.core.testing.MainDispatcherRule
 import com.spamguard.core.testing.aCallRecord
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -28,7 +31,8 @@ class CallLogViewModelTest {
     private val callLogRepository = FakeCallLogRepository()
     private val blockRuleRepository = FakeBlockRuleRepository()
 
-    private val viewModel = createViewModel(callLogRepository)
+    // lazy: uiState dùng stateIn trên viewModelScope, phải tạo sau khi MainDispatcherRule đặt Dispatchers.Main.
+    private val viewModel by lazy { createViewModel(callLogRepository) }
 
     @Test
     fun `starts by asking for call log permission`() {
@@ -192,12 +196,94 @@ class CallLogViewModelTest {
         assertEquals(CallLogUiState.PermissionRequired, viewModel.uiState.value)
     }
 
+    // --- Nhấn giữ để chặn đúng số ---
+
+    @Test
+    fun `confirming block adds exact rule and reports it`() = runTest {
+        callLogRepository.calls = listOf(aCallRecord(id = 1, number = "+84 987-654-321"))
+        viewModel.onPermissionResult(granted = true)
+
+        viewModel.onBlockConfirmed("+84 987-654-321")
+
+        // AddBlockRuleUseCase lưu pattern ở dạng đã chuẩn hóa.
+        val rule = blockRuleRepository.observeRules().first().single()
+        assertEquals("0987654321", rule.pattern)
+        assertEquals(MatchType.EXACT, rule.matchType)
+        val state = viewModel.uiState.value as CallLogUiState.Content
+        assertEquals(R.string.call_log_detail_message_blocked, state.userMessageRes)
+        // Danh sách phát lại theo quy tắc mới mà vẫn giữ thông báo.
+        assertEquals("0987654321", state.calls.single().blockedPattern)
+        assertEquals(1, state.blockedCount)
+    }
+
+    @Test
+    fun `blocking a number that already has an exact rule reports duplicate`() = runTest {
+        blockRuleRepository.addRule("0987654321", MatchType.EXACT)
+        callLogRepository.calls = listOf(aCallRecord(number = "0912345678"))
+        viewModel.onPermissionResult(granted = true)
+
+        viewModel.onBlockConfirmed("0987654321")
+
+        assertEquals(1, blockRuleRepository.observeRules().first().size)
+        val state = viewModel.uiState.value as CallLogUiState.Content
+        assertEquals(R.string.call_log_detail_message_duplicate, state.userMessageRes)
+    }
+
+    @Test
+    fun `blocking an invalid number reports it without adding a rule`() = runTest {
+        callLogRepository.calls = listOf(aCallRecord(number = "123"))
+        viewModel.onPermissionResult(granted = true)
+
+        viewModel.onBlockConfirmed("123")
+
+        assertTrue(blockRuleRepository.observeRules().first().isEmpty())
+        val state = viewModel.uiState.value as CallLogUiState.Content
+        assertEquals(R.string.call_log_detail_message_invalid, state.userMessageRes)
+    }
+
+    @Test
+    fun `hidden number is never blocked`() = runTest {
+        callLogRepository.calls = listOf(aCallRecord(number = ""))
+        viewModel.onPermissionResult(granted = true)
+
+        viewModel.onBlockConfirmed("")
+
+        assertTrue(blockRuleRepository.observeRules().first().isEmpty())
+        assertNull((viewModel.uiState.value as CallLogUiState.Content).userMessageRes)
+    }
+
+    @Test
+    fun `shown message is cleared`() {
+        callLogRepository.calls = listOf(aCallRecord())
+        viewModel.onPermissionResult(granted = true)
+        viewModel.onBlockConfirmed("0987654321")
+
+        viewModel.onUserMessageShown()
+
+        assertNull((viewModel.uiState.value as CallLogUiState.Content).userMessageRes)
+    }
+
+    @Test
+    fun `message survives a refresh of the call list`() {
+        callLogRepository.calls = listOf(aCallRecord(id = 1))
+        viewModel.onPermissionResult(granted = true)
+        viewModel.onBlockConfirmed("0987654321")
+        callLogRepository.calls = listOf(aCallRecord(id = 2), aCallRecord(id = 1))
+
+        viewModel.onRefresh()
+
+        val state = viewModel.uiState.value as CallLogUiState.Content
+        assertEquals(listOf(2L, 1L), state.calls.map { it.id })
+        assertEquals(R.string.call_log_detail_message_blocked, state.userMessageRes)
+    }
+
     private fun createViewModel(callLogRepository: CallLogRepository) = CallLogViewModel(
         getClassifiedCalls = GetClassifiedCallsUseCase(
             callLogRepository = callLogRepository,
             blockRuleRepository = blockRuleRepository,
             classifier = SpamClassifier(PhoneNumberNormalizer()),
         ),
+        addBlockRule = AddBlockRuleUseCase(blockRuleRepository, PhoneNumberNormalizer()),
         uiMapper = CallUiMapper(ZoneOffset.UTC),
     )
 

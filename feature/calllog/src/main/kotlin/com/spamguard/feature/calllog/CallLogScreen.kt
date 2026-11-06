@@ -2,11 +2,13 @@ package com.spamguard.feature.calllog
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -19,11 +21,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -52,6 +58,7 @@ internal fun CallLogRoute(
     onRequestPermission: () -> Unit,
     onOpenSettings: () -> Unit,
     onCallClick: (callId: Long) -> Unit,
+    onCallLongClick: (number: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -62,13 +69,14 @@ internal fun CallLogRoute(
         onRetry = viewModel::onRetry,
         onRefresh = viewModel::onRefresh,
         onCallClick = onCallClick,
+        onCallLongClick = onCallLongClick,
+        onUserMessageShown = viewModel::onUserMessageShown,
         // Lộ testTag thành resource-id để UiAutomator (Baseline Profile, macrobenchmark) tìm được.
         modifier = modifier.semantics { testTagsAsResourceId = true },
     )
 }
 
 /** Chỉ hiển thị [uiState]; mọi quyết định nằm ở ViewModel và [CallUiMapper]. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CallLogScreen(
     uiState: CallLogUiState,
@@ -77,10 +85,52 @@ internal fun CallLogScreen(
     onRetry: () -> Unit,
     onRefresh: () -> Unit,
     onCallClick: (callId: Long) -> Unit,
+    onCallLongClick: (number: String) -> Unit,
+    onUserMessageShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    UserMessageEffect(
+        messageRes = (uiState as? CallLogUiState.Content)?.userMessageRes,
+        snackbarHostState = snackbarHostState,
+        onUserMessageShown = onUserMessageShown,
+    )
+
+    Scaffold(
+        modifier = modifier,
+        // Toolbar và thanh điều hướng dưới của Activity đã xử lý inset.
+        contentWindowInsets = WindowInsets(0),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { innerPadding ->
+        CallLogContent(
+            uiState = uiState,
+            onRequestPermission = onRequestPermission,
+            onOpenSettings = onOpenSettings,
+            onRetry = onRetry,
+            onRefresh = onRefresh,
+            onCallClick = onCallClick,
+            onCallLongClick = onCallLongClick,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CallLogContent(
+    uiState: CallLogUiState,
+    onRequestPermission: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onRetry: () -> Unit,
+    onRefresh: () -> Unit,
+    onCallClick: (callId: Long) -> Unit,
+    onCallLongClick: (number: String) -> Unit,
+    modifier: Modifier,
+) {
     when (uiState) {
-        CallLogUiState.Loading -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CallLogUiState.Loading -> Box(modifier, contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
 
@@ -88,27 +138,27 @@ internal fun CallLogScreen(
             messageRes = R.string.call_log_permission_rationale,
             actionRes = R.string.call_log_action_grant_permission,
             onAction = onRequestPermission,
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier,
         )
 
         CallLogUiState.PermissionDeniedPermanently -> MessageState(
             messageRes = R.string.call_log_permission_denied_permanently,
             actionRes = R.string.call_log_action_open_settings,
             onAction = onOpenSettings,
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier,
         )
 
         CallLogUiState.Error -> MessageState(
             messageRes = R.string.call_log_error,
             actionRes = R.string.call_log_action_retry,
             onAction = onRetry,
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier,
         )
 
         is CallLogUiState.Empty -> PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = onRefresh,
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier,
         ) {
             // LazyColumn để cử chỉ kéo vẫn hoạt động khi không có dữ liệu.
             LazyColumn(Modifier.fillMaxSize()) {
@@ -124,9 +174,14 @@ internal fun CallLogScreen(
         is CallLogUiState.Content -> PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = onRefresh,
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier,
         ) {
-            CallList(calls = uiState.calls, blockedCount = uiState.blockedCount, onCallClick = onCallClick)
+            CallList(
+                calls = uiState.calls,
+                blockedCount = uiState.blockedCount,
+                onCallClick = onCallClick,
+                onCallLongClick = onCallLongClick,
+            )
         }
     }
 }
@@ -136,6 +191,7 @@ private fun CallList(
     calls: List<CallUiModel>,
     blockedCount: Int,
     onCallClick: (callId: Long) -> Unit,
+    onCallLongClick: (number: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -153,7 +209,11 @@ private fun CallList(
             )
         }
         items(calls, key = CallUiModel::id, contentType = { CONTENT_TYPE_CALL }) { call ->
-            CallItem(call, onClick = { onCallClick(call.id) })
+            CallItem(
+                call,
+                onClick = { onCallClick(call.id) },
+                onLongClick = { call.number?.takeIf { call.canBlock }?.let(onCallLongClick) },
+            )
         }
     }
 }
@@ -165,16 +225,24 @@ private const val CONTENT_TYPE_SUMMARY = "summary"
 private const val CONTENT_TYPE_CALL = "call"
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun CallItem(
     call: CallUiModel,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                // Số ẩn hoặc đã bị chặn: vẫn bắt nhấn giữ để thả tay không bị tính là chạm (mở chi tiết),
+                // nhưng không đặt nhãn "Chặn số này" cho TalkBack.
+                onLongClickLabel = if (call.canBlock) stringResource(R.string.call_log_detail_action_block) else null,
+                onLongClick = onLongClick,
+            )
             .heightIn(min = 72.dp)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
@@ -251,6 +319,7 @@ private val previewCalls = listOf(
         id = 1,
         title = "Chị Lan",
         subtitle = "0919009001",
+        number = "0919009001",
         timeText = "08:30 · 15/01/2026",
         typeIconRes = R.drawable.ic_call_incoming,
         typeLabelRes = R.string.call_log_type_incoming,
@@ -259,6 +328,7 @@ private val previewCalls = listOf(
     CallUiModel(
         id = 2,
         title = "0900123456",
+        number = "0900123456",
         subtitle = null,
         timeText = "07:12 · 15/01/2026",
         typeIconRes = R.drawable.ic_call_missed,
@@ -268,6 +338,7 @@ private val previewCalls = listOf(
     CallUiModel(
         id = 3,
         title = null,
+        number = null,
         subtitle = null,
         timeText = "21:45 · 14/01/2026",
         typeIconRes = R.drawable.ic_call_outgoing,
@@ -288,6 +359,8 @@ private fun CallLogScreenPreview(uiState: CallLogUiState) {
                 onRetry = {},
                 onRefresh = {},
                 onCallClick = {},
+                onCallLongClick = {},
+                onUserMessageShown = {},
             )
         }
     }

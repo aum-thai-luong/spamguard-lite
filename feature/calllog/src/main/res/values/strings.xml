@@ -10,6 +10,11 @@
     <string name="call_log_private_number">Số ẩn</string>
     <string name="call_log_blocked_by">Bị chặn theo quy tắc %1$s</string>
 
+    <!-- Nhấn giữ một cuộc gọi để chặn đúng số đó -->
+    <string name="call_log_block_title">Chặn số này?</string>
+    <string name="call_log_block_message">Các cuộc gọi từ %1$s sẽ bị chặn và đánh dấu spam.</string>
+    <string name="call_log_action_block">Chặn</string>
+
     <plurals name="call_log_blocked_summary">
         <item quantity="one">%d cuộc gọi bị chặn</item>
         <item quantity="other">%d cuộc gọi bị chặn</item>

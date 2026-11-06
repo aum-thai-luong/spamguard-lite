@@ -31,6 +31,7 @@ class CallUiMapper @Inject constructor(
             id = call.id,
             title = contactName ?: number,
             subtitle = number.takeIf { contactName != null },
+            number = number,
             timeText = timeFormatter.format(call.timestamp.atZone(zoneId)),
             typeIconRes = call.type.iconRes(),
             typeLabelRes = call.type.labelRes(),

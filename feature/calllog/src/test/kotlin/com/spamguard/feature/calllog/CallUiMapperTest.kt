@@ -70,6 +70,31 @@ class CallUiMapperTest {
     }
 
     @Test
+    fun `clean call with a number can be blocked`() {
+        val model = mapper.toUiModel(ClassifiedCall(aCallRecord(number = "0987654321"), SpamVerdict.Clean))
+
+        assertEquals("0987654321", model.number)
+        assertTrue(model.canBlock)
+    }
+
+    @Test
+    fun `hidden number cannot be blocked`() {
+        val model = mapper.toUiModel(ClassifiedCall(aCallRecord(number = " "), SpamVerdict.Clean))
+
+        assertNull(model.number)
+        assertFalse(model.canBlock)
+    }
+
+    @Test
+    fun `already blocked call cannot be blocked again`() {
+        val verdict = SpamVerdict.Blocked(aBlockRule(pattern = "0900"))
+
+        val model = mapper.toUiModel(ClassifiedCall(aCallRecord(number = "0900123456"), verdict))
+
+        assertFalse(model.canBlock)
+    }
+
+    @Test
     fun `empty list maps to empty state`() {
         assertEquals(CallLogUiState.Empty(), mapper.toUiState(emptyList()))
     }

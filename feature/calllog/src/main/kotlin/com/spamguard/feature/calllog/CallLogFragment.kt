@@ -47,6 +47,7 @@ class CallLogFragment : Fragment() {
                     onRequestPermission = ::requestCallLogPermission,
                     onOpenSettings = ::openAppSettings,
                     onCallClick = ::openCallDetail,
+                    onCallLongClick = ::confirmBlockNumber,
                 )
             }
         }
@@ -54,6 +55,12 @@ class CallLogFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        childFragmentManager.setFragmentResultListener(
+            ConfirmBlockNumberDialogFragment.REQUEST_KEY,
+            viewLifecycleOwner,
+        ) { _, result ->
+            viewModel.onBlockConfirmed(ConfirmBlockNumberDialogFragment.parseResult(result))
+        }
         // Chỉ tự hỏi quyền lần đầu mở màn hình; khi khôi phục, người dùng tự bấm "Cấp quyền".
         if (savedInstanceState == null && !hasCallLogPermission()) {
             requestCallLogPermission()
@@ -74,6 +81,12 @@ class CallLogFragment : Fragment() {
 
     private fun openCallDetail(callId: Long) {
         findNavController().navigate(callDetailRequest(callId))
+    }
+
+    private fun confirmBlockNumber(number: String) {
+        ConfirmBlockNumberDialogFragment
+            .newInstance(number)
+            .show(childFragmentManager, ConfirmBlockNumberDialogFragment.TAG)
     }
 
     private fun openAppSettings() {

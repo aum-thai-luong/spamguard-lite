@@ -27,13 +27,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,7 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.calllog.MessageState
 import com.spamguard.feature.calllog.R
-import kotlinx.coroutines.launch
+import com.spamguard.feature.calllog.UserMessageEffect
 
 /**
  * Nối [CallDetailViewModel] với [CallDetailScreen]. Gọi lại, sao chép và hộp thoại bỏ chặn
@@ -261,25 +258,6 @@ private fun Actions(
                 Text(stringResource(R.string.call_log_detail_action_unblock))
             }
         }
-    }
-}
-
-/** Hiện snackbar một lần cho [messageRes], theo cách của màn hình Danh sách chặn. */
-@Composable
-private fun UserMessageEffect(
-    @StringRes messageRes: Int?,
-    snackbarHostState: SnackbarHostState,
-    onUserMessageShown: () -> Unit,
-) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    LaunchedEffect(messageRes) {
-        if (messageRes == null) return@LaunchedEffect
-        val message = context.getString(messageRes)
-        onUserMessageShown()
-        snackbarHostState.currentSnackbarData?.dismiss()
-        // Scope riêng: effect này bị hủy ngay khi messageRes về null.
-        scope.launch { snackbarHostState.showSnackbar(message) }
     }
 }
 

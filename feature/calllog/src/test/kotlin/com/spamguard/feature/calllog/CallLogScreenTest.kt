@@ -10,11 +10,14 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.calllog.model.CallUiModel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,6 +40,8 @@ class CallLogScreenTest {
     private var openSettingsClicks = 0
     private var retryClicks = 0
     private var clickedCallId: Long? = null
+    private var longClickedNumber: String? = null
+    private var userMessageShownCount = 0
 
     @Before
     fun setUp() {
@@ -49,6 +54,8 @@ class CallLogScreenTest {
                     onRetry = { retryClicks++ },
                     onRefresh = {},
                     onCallClick = { clickedCallId = it },
+                    onCallLongClick = { longClickedNumber = it },
+                    onUserMessageShown = { userMessageShownCount++ },
                 )
             }
         }
@@ -132,17 +139,83 @@ class CallLogScreenTest {
         assertEquals(2L, clickedCallId)
     }
 
+    @Test
+    fun `long pressing a call asks to block its number`() {
+        uiState = CallLogUiState.Content(
+            calls = listOf(aCallUiModel(id = 1, title = "Chị Lan", subtitle = "0919009001", number = "0919009001")),
+            blockedCount = 0,
+        )
+
+        composeRule.onNodeWithText("Chị Lan").performTouchInput { longClick() }
+
+        assertEquals("0919009001", longClickedNumber)
+        assertNull(clickedCallId)
+    }
+
+    @Test
+    fun `long pressing a hidden number does nothing`() {
+        uiState = CallLogUiState.Content(calls = listOf(aCallUiModel(title = null, number = null)), blockedCount = 0)
+
+        composeRule.onNodeWithText(text(R.string.call_log_private_number)).performTouchInput { longClick() }
+
+        assertNull(longClickedNumber)
+    }
+
+    @Test
+    fun `long pressing an already blocked call does nothing`() {
+        uiState = CallLogUiState.Content(
+            calls = listOf(aCallUiModel(title = "0900123456", number = "0900123456", blockedPattern = "0900")),
+            blockedCount = 1,
+        )
+
+        composeRule.onNodeWithText("0900123456").performTouchInput { longClick() }
+
+        assertNull(longClickedNumber)
+        assertNull(clickedCallId)
+    }
+
+    @Test
+    fun `user message shows snackbar once`() {
+        uiState = CallLogUiState.Content(
+            calls = listOf(aCallUiModel()),
+            blockedCount = 0,
+            userMessageRes = R.string.call_log_detail_message_blocked,
+        )
+
+        composeRule.onNodeWithText(text(R.string.call_log_detail_message_blocked)).assertIsDisplayed()
+        assertEquals(1, userMessageShownCount)
+    }
+
+    @Test
+    fun `replayed list with the same message does not show snackbar again`() {
+        val message = R.string.call_log_detail_message_blocked
+        uiState = CallLogUiState.Content(calls = listOf(aCallUiModel()), blockedCount = 0, userMessageRes = message)
+        composeRule.waitForIdle()
+
+        // Danh sách phát lại (quy tắc mới) trước khi ViewModel kịp xoá thông báo.
+        uiState = CallLogUiState.Content(
+            calls = listOf(aCallUiModel(blockedPattern = "0987654321")),
+            blockedCount = 1,
+            userMessageRes = message,
+        )
+        composeRule.waitForIdle()
+
+        assertEquals(1, userMessageShownCount)
+    }
+
     private fun text(@StringRes res: Int): String = context.getString(res)
 
     private fun aCallUiModel(
         id: Long = 1,
         title: String? = "0987654321",
         subtitle: String? = null,
+        number: String? = title,
         blockedPattern: String? = null,
     ) = CallUiModel(
         id = id,
         title = title,
         subtitle = subtitle,
+        number = number,
         timeText = "08:30 · 15/01/2026",
         typeIconRes = R.drawable.ic_call_incoming,
         typeLabelRes = R.string.call_log_type_incoming,
