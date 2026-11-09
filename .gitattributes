@@ -1,2 +1,5 @@
 # Script hook của Claude Code phải giữ LF để chạy được trong Git Bash
 *.sh text eol=lf
+# gradlew chạy trên runner Linux của CI: luôn giữ LF dù máy Windows bật core.autocrlf
+gradlew text eol=lf
+*.bat text eol=crlf

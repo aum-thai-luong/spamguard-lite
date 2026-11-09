@@ -1,0 +1,40 @@
+name: Build và unit test
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Cài JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: 17
+          distribution: zulu
+
+      - name: Cài Gradle (có cache)
+        uses: gradle/actions/setup-gradle@v5
+
+      # Unit test gồm cả Robolectric; jar android-all được Gradle tải như dependency thường.
+      - name: Build, unit test và lint
+        run: ./gradlew assembleDebug test lint --stacktrace
+
+      - name: Lưu báo cáo test và lint
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            **/build/reports/tests/
+            **/build/reports/lint-results-*.html
