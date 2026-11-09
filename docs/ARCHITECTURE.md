@@ -20,10 +20,14 @@ flowchart LR
     domain[":core:domain<br/>(Kotlin thuần)"]
     data[":core:data<br/>(Room, ContentResolver)"]
     testing[":core:testing<br/>(fake, test rule)"]
-    ui[":core:ui<br/>(theme XML + Compose)"]
+    ui[":core:ui<br/>(theme Compose)"]
 
     app --> calllog
     app --> blocklist
+    calllog --> calllognav[":feature:calllog-navigation<br/>(NavKey)"]
+    blocklist --> blocklistnav[":feature:blocklist-navigation<br/>(NavKey)"]
+    app --> calllognav
+    app --> blocklistnav
     app --> data
     calllog --> domain
     blocklist --> domain
@@ -36,16 +40,18 @@ flowchart LR
 
 Feature module **không** phụ thuộc `:core:data`. Feature chỉ biết use case và interface repository trong domain.
 
-`:baselineprofile` là module test (`com.android.test`) nằm ngoài sơ đồ trên. Nó chạy `:app` trên thiết bị bằng UiAutomator để sinh Baseline Profile và đo hiệu năng. Module này chỉ biết package name và các resource-id/testTag (`call_log_list`, `blocklistFragment`), không phụ thuộc code của module nào.
+Mỗi feature có một module `*-navigation` chỉ chứa `NavKey` của các màn hình trong feature đó. Feature muốn mở màn hình của feature khác chỉ phụ thuộc module navigation của feature đích, không phụ thuộc chính feature đó.
 
-`:core:ui` chỉ chứa theme dùng chung (`Theme.SpamGuard` cho XML, `SpamGuardTheme` cho Compose), không chứa logic và không phụ thuộc domain.
+`:baselineprofile` là module test (`com.android.test`) nằm ngoài sơ đồ trên. Nó chạy `:app` trên thiết bị bằng UiAutomator để sinh Baseline Profile và đo hiệu năng. Module này chỉ biết package name và các testTag lộ thành resource-id (`call_log_list`, `blocklistFragment`), không phụ thuộc code của module nào.
+
+`:core:ui` chỉ chứa theme dùng chung (`SpamGuardTheme` cho Compose; `Theme.SpamGuard` chỉ là theme XML của cửa sổ trước khi Compose vẽ), không chứa logic và không phụ thuộc domain.
 
 ## Luồng dữ liệu (UDF)
 
 Lấy ví dụ màn hình **Cuộc gọi**:
 
 ```
-CallLogFragment ──onPermissionResult()──▶ CallLogViewModel
+CallLogRoute ────onPermissionResult()──▶ CallLogViewModel
       ▲                                        │ GetClassifiedCallsUseCase(limit)
       │ uiState: StateFlow<CallLogUiState>     ▼
       └── CallLogScreen(state) ◀── CallUiMapper ◀── Flow<List<ClassifiedCall>>
@@ -54,8 +60,8 @@ CallLogFragment ──onPermissionResult()──▶ CallLogViewModel
                        BlockRuleRepository.observeRules() (phát lại khi quy tắc đổi)
 ```
 
-- **Fragment** chỉ là chỗ chứa: trả về `ComposeView` bọc `SpamGuardTheme`, xin quyền hệ thống và mở dialog. Trong Fragment không có logic nghiệp vụ.
-- **Route/Screen**: `CallLogRoute` collect `uiState` bằng `collectAsStateWithLifecycle()` rồi truyền cho `CallLogScreen`. Screen là composable không giữ state, chỉ vẽ `uiState` và gọi callback sự kiện.
+- **App shell** (`SpamGuardNavigation` trong `:app`): `Scaffold` có thanh trên, thanh điều hướng dưới và `NavDisplay` của Navigation 3. Back stack là danh sách `NavKey` được lưu lại khi xoay màn hình hoặc hệ thống dừng process.
+- **Route/Screen**: `CallLogRoute` lấy ViewModel bằng `hiltViewModel()`, collect `uiState` bằng `collectAsStateWithLifecycle()` rồi truyền cho `CallLogScreen`. Route cũng xử lý việc cần Android API (xin quyền, mở Cài đặt, RoleManager, clipboard). Screen là composable không giữ state, chỉ vẽ `uiState` (kể cả dialog) và gọi callback sự kiện.
 - **ViewModel** giữ trạng thái màn hình trong `StateFlow`. Trạng thái của mỗi màn hình được mô tả bằng một kiểu duy nhất (`CallLogUiState`, `BlocklistUiState`).
 - **Mapper** (`CallUiMapper`, `BlockRuleUiMapper`) chuyển model domain thành model hiển thị: định dạng thời gian, chọn icon, chọn chuỗi. Nhờ vậy ViewModel gọn và mapper test được riêng.
 - **Use case** chỉ làm một việc, gọi qua `operator fun invoke`.
@@ -76,8 +82,8 @@ CallLogFragment ──onPermissionResult()──▶ CallLogViewModel
 - **Trạng thái UI**: ViewModel phát `StateFlow`; Route collect bằng `collectAsStateWithLifecycle()`. Không dùng LiveData.
 - **Compose**: Screen không giữ state và không gọi repository; item `LazyColumn` có `key` ổn định; mỗi trạng thái màn hình có `@Preview`.
 - **Thông báo một lần** (ví dụ snackbar): đặt trong UI state (`userMessageRes`). UI hiển thị xong thì gọi `onUserMessageShown()`.
-- **Kết quả từ dialog**: dùng Fragment Result API (`setFragmentResult` / `setFragmentResultListener`). Dialog phải có constructor rỗng; dữ liệu đi qua `arguments` và bundle kết quả.
-- **ViewBinding** (chỉ còn ở dialog): tạo binding trong `onCreateDialog`, không lưu vào field.
+- **Dialog**: composable vẽ theo `uiState`. ViewModel giữ trạng thái mở/đóng và dữ liệu cần xác nhận (ví dụ id quy tắc), nên dialog còn nguyên khi xoay màn hình và id không đi vòng qua UI.
+- **Điều hướng**: Navigation 3. Feature đăng ký màn hình bằng `EntryProviderScope<NavKey>.xxxEntries(...)`; tham số màn hình nằm trong `NavKey` và tới ViewModel qua assisted injection.
 - **Lỗi**: ViewModel chỉ bắt các lỗi domain đã biết. Lỗi lập trình phải để lộ ra, không nuốt.
 - **Chuỗi hiển thị**: luôn đặt trong `strings.xml`, tên có tiền tố theo module (`call_log_*`, `blocklist_*`).
 - **Dữ liệu cá nhân**: không log số điện thoại hay tên danh bạ. Test dùng dữ liệu giả.
@@ -85,8 +91,8 @@ CallLogFragment ──onPermissionResult()──▶ CallLogViewModel
 
 ## Thêm một màn hình mới
 
-1. Tạo module `feature/<tên>` (sao chép `build.gradle.kts` của `feature/blocklist`), rồi thêm vào `settings.gradle.kts`.
+1. Tạo module `feature/<tên>` (sao chép `build.gradle.kts` của `feature/blocklist`) và `feature/<tên>-navigation` (sao chép của `feature/blocklist-navigation`), rồi thêm cả hai vào `settings.gradle.kts`.
 2. Domain: thêm use case (và interface repository nếu cần).
 3. Data: cài đặt repository rồi `@Binds` trong `DataModule`.
-4. Feature: viết `UiState`, `UiMapper`, `ViewModel`, `XxxRoute`/`XxxScreen` (kèm Preview), Fragment chứa `ComposeView`, `strings.xml`; test cho ViewModel và mapper.
-5. App: thêm destination vào `nav_graph.xml` và item vào `bottom_navigation.xml`.
+4. Feature: viết `NavKey` trong module navigation; `UiState`, `UiMapper`, `ViewModel`, `XxxRoute`/`XxxScreen` (kèm Preview), hàm `xxxEntries()`, `strings.xml`; test cho ViewModel và mapper.
+5. App: gọi `xxxEntries()` trong `entryProvider` của `SpamGuardNavigation`; nếu là tab, thêm vào `TopLevelDestination`. Thêm trường hợp vào instrumented test `NavigationTest` nếu là luồng chính.
