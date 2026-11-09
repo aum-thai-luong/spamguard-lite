@@ -243,8 +243,8 @@ Epic 1 (FR-1, 2, 4–11, 14) dựng AD-1..AD-11, AD-13, AD-14. Epic 2 (FR-3, 12,
 
 ## Deferred
 
-- **Kết quả làm thử (PRD §9, câu 1), chặn tiêu chí kiểm tay của FR-8:** số trong danh bạ có được chuyển tới service không, `setSilenceCall` có tắt rung không. Làm trước Epic 1. Nếu không, ghi thành giới hạn đã biết; spine không đổi vì đổi sang app gọi điện mặc định nằm ngoài phạm vi.
-- **DND của hệ thống (PRD §9, câu 2):** không điều khiển; ghi kết quả vào hướng dẫn demo.
+- **Cuộc gọi từ số trong danh bạ (đã làm thử, PRD §9):** hệ thống không chuyển những cuộc gọi này cho service khi app không phải app gọi điện mặc định. Chấp nhận là giới hạn: chúng luôn đổ chuông và không có bản ghi im lặng. Spine không đổi; dùng `ROLE_DIALER` nằm ngoài phạm vi. `setSilenceCall` đã được xác nhận tắt cả chuông lẫn rung.
+- **DND của hệ thống (đã làm thử, PRD §9):** DND thắng quyết định `Ring` của app. Không điều khiển DND; hướng dẫn demo ghi phải tắt DND.
 - **Câu chữ, màu, bố cục:** do `EXPERIENCE.md` và `DESIGN.md` quyết.
 - **Thuật toán gợi ý chi tiết (FR-3):** đếm trong use case từ `getRecentCalls`; giới hạn số dòng đọc do story quyết.
 - **Triển khai, phát hành, vận hành:** không đổi so với app hiện có (không backend, build và Baseline Profile như cũ). Thêm tab thì sinh lại Baseline Profile.

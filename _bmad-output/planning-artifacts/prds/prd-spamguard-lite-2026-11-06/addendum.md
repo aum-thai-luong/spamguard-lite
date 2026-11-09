@@ -22,8 +22,8 @@ Ghi chú kỹ thuật cho bước architecture. Phần này nói cách làm, nê
 
 ## Rủi ro kỹ thuật đã biết
 
-- Có thể không sàng lọc được cuộc gọi từ số trong danh bạ (PRD §9, câu hỏi 1).
-- DND của hệ thống có thể ghi đè lên việc đổ chuông của số quan trọng (PRD §9, câu hỏi 2).
+- Đã xác nhận (PRD §9): không sàng lọc được cuộc gọi từ số trong danh bạ; chấp nhận là giới hạn.
+- Đã xác nhận (PRD §9): DND của hệ thống ghi đè quyết định đổ chuông của app; tắt DND khi demo.
 - Cuộc gọi đến trong lúc app đang ghi bản ghi im lặng: nếu ghi không kịp trước khi số đó gọi lại thì có thể không nhận ra gọi lại khẩn. Cửa sổ 3 phút làm rủi ro này rất nhỏ.
 
 ## Cảnh báo khi chặn số quan trọng (FR-2)

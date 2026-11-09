@@ -2,7 +2,7 @@
 title: 'PRD: Giờ yên tĩnh (capstone SpamGuard Lite)'
 status: final
 created: '2026-11-06'
-updated: '2026-11-06'
+updated: '2026-11-09'
 ---
 
 # PRD: Giờ yên tĩnh
@@ -15,7 +15,7 @@ PRD này dành cho nhóm capstone, người chấm, và các bước BMAD tiếp
 
 ## 1. Tầm nhìn
 
-Giờ yên tĩnh cho người dùng một buổi tối và những cuộc họp không bị cuộc gọi làm phiền, mà không phải đánh đổi bằng nỗi lo lỡ cuộc gọi của bố mẹ hay sếp. Người dùng đặt khung giờ một lần. Trong khung giờ đó, chỉ số quan trọng mới đổ chuông. Cuộc gọi khác vẫn vào máy nhưng im lặng, và sáng hôm sau người dùng biết ngay ai đã gọi.
+Giờ yên tĩnh cho người dùng một buổi tối và những cuộc họp không bị cuộc gọi làm phiền, mà không phải đánh đổi bằng nỗi lo lỡ cuộc gọi của bố mẹ hay sếp. Người dùng đặt khung giờ một lần. Trong khung giờ đó, cuộc gọi từ số chưa lưu trong danh bạ vẫn vào máy nhưng im lặng, trừ số quan trọng. Số đã lưu trong danh bạ vẫn đổ chuông, vì Android không cho app sàng lọc những cuộc gọi này (§9). Sáng hôm sau người dùng biết ngay ai đã gọi.
 
 Tính năng nằm trong app quản lý cuộc gọi người dùng đang dùng, nên ba việc diễn ra ở cùng một chỗ: chọn số quan trọng, đặt giờ, và xem lại.
 
@@ -31,6 +31,7 @@ Tính năng nằm trong app quản lý cuộc gọi người dùng đang dùng, 
 
 - Máy Android 8–9 (API 26–28): hệ thống không cho app im chuông cuộc gọi.
 - Người cần tắt tiếng cả SMS và thông báo của app khác: dùng DND của hệ thống.
+- Người muốn im cả cuộc gọi từ số đã lưu trong danh bạ: khi SpamGuard không phải app gọi điện mặc định, hệ thống không chuyển những cuộc gọi này cho app (§9).
 
 ### 2.3 Hành trình người dùng chính
 
@@ -40,10 +41,10 @@ Persona chung: **Minh**, trưởng nhóm kỹ thuật, có bố mẹ ở quê, h
   Minh mở SpamGuard Lite, vào màn Giờ yên tĩnh. App gợi ý vài số Minh hay liên lạc, lấy từ nhật ký cuộc gọi. Minh chọn số của mẹ và của sếp vào **danh sách quan trọng**. Minh tạo khung 21:00–07:00, để nguyên "Hằng ngày", rồi bật công tắc. Màn hình báo "Đang tắt, sẽ bật lúc 21:00". **Edge case:** app chưa có vai trò sàng lọc cuộc gọi. Màn hình báo tính năng chưa hoạt động và có nút cấp vai trò.
 
 - **UJ-2. Tối đó, chỉ cuộc gọi của mẹ làm máy reo.**
-  22:15, một số quảng cáo gọi tới. Máy hiện cuộc gọi nhưng không chuông, không rung. 22:40, mẹ gọi và máy reo như thường. 23:05, bạn thân của Minh (không có trong danh sách) gọi; máy im. Bạn gọi lại lúc 23:06 và lần này máy reo vì đó là **gọi lại khẩn**. **Edge case:** số quảng cáo đã nằm trong danh sách chặn thì vẫn bị chặn như trước, không chỉ im lặng.
+  22:15, một số quảng cáo gọi tới. Máy hiện cuộc gọi nhưng không chuông, không rung. 22:40, mẹ gọi và máy reo như thường. 23:05, anh giao hàng (số chưa lưu, không có trong danh sách) gọi; máy im. Anh gọi lại lúc 23:06 và lần này máy reo vì đó là **gọi lại khẩn**. **Edge case:** số quảng cáo đã nằm trong danh sách chặn thì vẫn bị chặn như trước, không chỉ im lặng. **Edge case:** bạn thân của Minh có số trong danh bạ, nên gọi lúc nào máy cũng reo (giới hạn của Android, §9).
 
 - **UJ-3. Sáng ra, Minh biết ngay tối qua ai đã gọi.**
-  07:30, Minh mở tab Cuộc gọi. Đầu danh sách có dòng "2 cuộc gọi bị im lặng trong giờ yên tĩnh". Hai cuộc gọi đó có nhãn "Đã im lặng", nên Minh nhận ra ngay số quảng cáo và lần gọi đầu của bạn thân.
+  07:30, Minh mở tab Cuộc gọi. Đầu danh sách có dòng "2 cuộc gọi bị im lặng trong giờ yên tĩnh". Hai cuộc gọi đó có nhãn "Đã im lặng", nên Minh nhận ra ngay số quảng cáo và lần gọi đầu của anh giao hàng.
 
 - **UJ-4. Họp đột xuất, Minh bấm một nút.**
   14:00, sếp triệu tập họp gấp. Minh bấm **Yên tĩnh trong 1 giờ**. Màn hình báo "Yên tĩnh đến 15:00" và có nút Hủy. 15:00 chế độ tự tắt. Minh không phải nhớ bật lại chuông.
@@ -164,7 +165,8 @@ Khi đang yên tĩnh, cuộc gọi đến từ số không quan trọng bị im 
 - Given đang yên tĩnh và `0987654321` không phải số quan trọng, when số đó gọi đến, then quyết định là **im lặng** và có một bản ghi cuộc gọi bị im lặng (số, thời điểm).
 - Given **không** yên tĩnh, then quyết định là **đổ chuông** với mọi số không bị chặn.
 - Given đang yên tĩnh và cuộc gọi từ số ẩn, then quyết định là im lặng. Số ẩn không bao giờ là số quan trọng và không được tính là gọi lại khẩn.
-- *(Thiết bị thật hoặc emulator, kiểm tay)* Given đang yên tĩnh trên Android 10 trở lên và app có vai trò sàng lọc cuộc gọi, when một số không quan trọng gọi tới, then máy không chuông, không rung, cuộc gọi vẫn hiện và vẫn có trong nhật ký. Tài liệu `setSilenceCall` chỉ nói tới nhạc chuông, nên việc "không rung" phải được xác nhận trong phần làm thử (§9, câu 1); trước khi xác nhận, tiêu chí này chưa phải cam kết.
+- *(Thiết bị thật hoặc emulator, kiểm tay)* Given đang yên tĩnh trên Android 10 trở lên và app có vai trò sàng lọc cuộc gọi, when một số không quan trọng và chưa lưu trong danh bạ gọi tới, then máy không chuông, không rung, cuộc gọi vẫn hiện và vẫn có trong nhật ký. Phần làm thử đã xác nhận cả "không rung" (§9, câu 1).
+- *(Kiểm tay, giới hạn của nền tảng)* Given đang yên tĩnh, when một số **có trong danh bạ** gọi tới, then máy đổ chuông như thường và không có bản ghi cuộc gọi bị im lặng, vì hệ thống không chuyển cuộc gọi này cho app.
 
 #### FR-9: Thứ tự ưu tiên
 
@@ -252,12 +254,12 @@ Toàn bộ FR-1 đến FR-14 đều trong phạm vi và bắt buộc chạy khi 
 - **Epic 1: Im chuông theo giờ yên tĩnh**, phần lõi để có bản demo chạy được sớm nhất: FR-1, FR-2, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-14.
 - **Epic 2: Gợi ý và xem lại**, phần hỗ trợ dùng dễ hơn: FR-3, FR-12, FR-13.
 
-Thứ tự làm theo brief. Bước 0 là phần làm thử im chuông số trong danh bạ (§9, câu hỏi 1), làm trước Epic 1.
+Thứ tự làm theo brief. Bước 0 (làm thử im chuông) đã xong ngày 2026-11-09, kết quả ở §9.
 
 ## 8. Chỉ số thành công
 
 **Chính**
-- **SM-1:** chạy kịch bản demo trên emulator (2 số quan trọng, 3 số thường, 1 lần gọi lại khẩn) trong một khung giờ đang bật. 100% cuộc gọi đúng quyết định đổ chuông hoặc im lặng. Kiểm FR-8, FR-9, FR-10.
+- **SM-1:** chạy kịch bản demo trên emulator (2 số quan trọng, 3 số thường chưa lưu trong danh bạ, 1 lần gọi lại khẩn) trong một khung giờ đang bật. 100% cuộc gọi đúng quyết định đổ chuông hoặc im lặng. Kiểm FR-8, FR-9, FR-10.
 - **SM-2:** mọi FR có ít nhất một test tự động cho tiêu chí chấp nhận (trừ tiêu chí ghi "kiểm tay"), và `./gradlew test lint` xanh. Kiểm toàn bộ FR.
 
 **Phụ**
@@ -267,7 +269,10 @@ Thứ tự làm theo brief. Bước 0 là phần làm thử im chuông số tron
 **Chỉ số đối trọng (không tối ưu)**
 - **SM-C1:** số cuộc gọi bị im lặng. Im lặng nhiều hơn không có nghĩa là tốt hơn. Đối trọng với SM-1: không nới ngưỡng gọi lại khẩn hay bỏ lưới an toàn để tăng tỉ lệ im lặng.
 
-## 9. Câu hỏi còn mở
+## 9. Kết quả làm thử (2026-11-09)
 
-1. **Điều kiện chặn trước architecture:** hệ thống có chuyển cuộc gọi từ số **có trong danh bạ** cho app sàng lọc không, khi app không phải app gọi điện mặc định? Nếu không, FR-8 hỏng với bạn bè đã lưu số. Cùng lần làm thử, kiểm luôn `setSilenceCall` có tắt cả rung không (FR-8 hứa "không rung"). Cần làm thử trên emulator (xem addendum của brief).
-2. Nếu người dùng bật cả DND của hệ thống, số quan trọng có còn đổ chuông không? Có thể là không, vì DND của hệ thống nằm ngoài tầm kiểm soát của app. PRD đang để ngoài phạm vi; cần kiểm khi làm thử và ghi vào hướng dẫn demo.
+Làm thử trên emulator Android 14 (API 34). Google Dialer là app gọi điện mặc định, SpamGuard giữ vai trò sàng lọc cuộc gọi.
+
+1. **Số trong danh bạ: không sàng lọc được.** Với số có trong danh bạ, Telecom ghi `contact exists`, không gọi service của SpamGuard, và máy đổ chuông. Đã quyết định chấp nhận đây là giới hạn: Giờ yên tĩnh chỉ im cuộc gọi từ số chưa lưu (FR-8, §2.2). Muốn bỏ giới hạn này thì SpamGuard phải là app gọi điện mặc định, nằm ngoài phạm vi.
+2. **`setSilenceCall` tắt cả chuông lẫn rung.** Telecom ghi `SKIP_RINGING (Silent ringing requested)` và không có rung nhạc chuông. Cuộc gọi đối chứng không bị im lặng thì có `START_RINGER` và có rung.
+3. **DND của hệ thống thắng quyết định đổ chuông của app.** Khi bật DND ở chế độ ưu tiên mặc định (chỉ cho liên hệ gắn sao và người gọi lặp lại), một số chưa lưu được app cho qua vẫn bị `DND suppressed`. Ghi vào hướng dẫn demo: tắt DND của hệ thống khi demo.

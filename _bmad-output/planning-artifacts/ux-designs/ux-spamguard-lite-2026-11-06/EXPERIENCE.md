@@ -2,7 +2,7 @@
 name: SpamGuard Lite — Giờ yên tĩnh
 status: final
 created: '2026-11-06'
-updated: '2026-11-06'
+updated: '2026-11-09'
 sources:
   - ../../prds/prd-spamguard-lite-2026-11-06/prd.md
   - ../../briefs/brief-spamguard-lite-2026-11-06/brief.md
@@ -122,7 +122,7 @@ Flow này không có giao diện trong app; hành vi nằm ở FR-8 đến FR-10
 
 1. Minh mở app ở tab Cuộc gọi.
 2. Dưới dòng "N cuộc gọi bị chặn" là dòng "2 cuộc gọi bị im lặng trong giờ yên tĩnh".
-3. **Cao trào:** hai dòng có nhãn "Đã im lặng". Minh nhận ra lần gọi đầu của bạn thân và bấm vào để mở chi tiết, rồi gọi lại từ đó.
+3. **Cao trào:** hai dòng có nhãn "Đã im lặng". Minh nhận ra lần gọi đầu của anh giao hàng (số chưa lưu) và bấm vào để mở chi tiết, rồi gọi lại từ đó.
 
 ### Flow UJ-4: Họp đột xuất
 
