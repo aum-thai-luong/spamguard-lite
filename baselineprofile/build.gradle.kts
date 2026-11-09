@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 // Cần emulator hoặc thiết bị đang kết nối (API 28+, nên dùng API 33+), đã chạy scripts/seed-call-log.sh.
 plugins {
     alias(libs.plugins.android.test)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.androidx.baselineprofile)
 }
 

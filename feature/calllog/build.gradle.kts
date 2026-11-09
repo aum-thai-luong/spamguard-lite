@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
@@ -77,12 +76,12 @@ dependencies {
 // thư mục build. Thiếu jar nào, test báo "Path is not a file: .../android-all-instrumented-<version>.jar".
 val robolectricAndroidAllJars = listOf(
     libs.robolectric.android.all.sdk34,
-    libs.robolectric.android.all.sdk35,
+    libs.robolectric.android.all.sdk37,
 ).map { jar ->
     configurations.detachedConfiguration(dependencies.create(jar.get())).apply { isTransitive = false }
 }
 
-val prepareRobolectricJars by tasks.registering(Sync::class) {
+val prepareRobolectricJars = tasks.register<Sync>("prepareRobolectricJars") {
     from(robolectricAndroidAllJars)
     into(layout.buildDirectory.dir("robolectric-jars"))
 }

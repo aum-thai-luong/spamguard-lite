@@ -1,40 +1,40 @@
 [versions]
 # SDK
-compileSdk = "35"
-targetSdk = "35"
+compileSdk = "37"
+targetSdk = "37"
 minSdk = "26"
 
 # Build
-agp = "8.7.3"
-kotlin = "2.0.21"
-ksp = "2.0.21-1.0.28"
+agp = "9.5.1"
+kotlin = "2.4.21"
+ksp = "2.3.13"
 
 # AndroidX
-activity = "1.9.3"
-composeBom = "2024.12.01"
-appcompat = "1.7.0"
-coreKtx = "1.15.0"
-fragment = "1.8.5"
-lifecycle = "2.8.7"
-navigation = "2.8.5"
-room = "2.6.1"
-benchmark = "1.4.1"
+activity = "1.13.0"
+composeBom = "2026.09.00"
+appcompat = "1.8.0"
+coreKtx = "1.19.1"
+fragment = "1.9.1"
+lifecycle = "2.11.0"
+navigation = "2.10.2"
+room = "2.8.5"
+benchmark = "1.5.0"
 profileinstaller = "1.4.1"
-uiautomator = "2.3.0"
+uiautomator = "2.4.1"
 
 # Others
-coroutines = "1.9.0"
-hilt = "2.52"
+coroutines = "1.11.0"
+hilt = "2.60.1"
 javaxInject = "1"
 junit = "4.13.2"
-androidxTestCore = "1.6.1"
-androidxTestExtJunit = "1.2.1"
-robolectric = "4.14.1"
-# Jar Android của Robolectric: SDK 34 để chạy test, SDK 35 (= compileSdk) Robolectric
+androidxTestCore = "1.7.0"
+androidxTestExtJunit = "1.3.0"
+robolectric = "4.17"
+# Jar Android của Robolectric: SDK 34 để chạy test, SDK 37 (= compileSdk) Robolectric
 # cũng đọc khi khởi động. Đổi cùng lúc với `robolectric`.
 robolectricAndroidAllSdk34 = "14-robolectric-10818077-i7"
-robolectricAndroidAllSdk35 = "15-robolectric-12650502-i7"
-material = "1.12.0"
+robolectricAndroidAllSdk37 = "17-robolectric-16653203-i7"
+material = "1.14.0"
 
 [libraries]
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activity" }
@@ -73,7 +73,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 robolectric-android-all-sdk34 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "robolectricAndroidAllSdk34" }
-robolectric-android-all-sdk35 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "robolectricAndroidAllSdk35" }
+robolectric-android-all-sdk37 = { group = "org.robolectric", name = "android-all-instrumented", version.ref = "robolectricAndroidAllSdk37" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -81,7 +81,6 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 android-test = { id = "com.android.test", version.ref = "agp" }
 androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "benchmark" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
