@@ -14,5 +14,7 @@ sealed interface CallDetailUiState {
         val detail: CallDetailUiModel,
         /** Thông báo một lần (snackbar); UI gọi `onUserMessageShown()` sau khi hiển thị. */
         @StringRes val userMessageRes: Int? = null,
+        /** Quy tắc đang chờ người dùng xác nhận bỏ chặn; `null` khi không có hộp thoại. */
+        val pendingUnblock: BlockingRuleUi? = null,
     ) : CallDetailUiState
 }

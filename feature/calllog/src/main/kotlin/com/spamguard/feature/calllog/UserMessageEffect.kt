@@ -5,7 +5,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import kotlinx.coroutines.launch
 
 /**
@@ -18,11 +18,11 @@ internal fun UserMessageEffect(
     snackbarHostState: SnackbarHostState,
     onUserMessageShown: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     LaunchedEffect(messageRes) {
         if (messageRes == null) return@LaunchedEffect
-        val message = context.getString(messageRes)
+        val message = resources.getString(messageRes)
         onUserMessageShown()
         snackbarHostState.currentSnackbarData?.dismiss()
         // Scope riêng: effect này bị hủy ngay khi messageRes về null.

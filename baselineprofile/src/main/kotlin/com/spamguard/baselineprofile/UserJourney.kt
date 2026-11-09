@@ -28,8 +28,8 @@ internal fun MacrobenchmarkScope.scrollCallLog() {
     device.waitForIdle()
 }
 
-/** Mở tab Danh sách chặn qua thanh điều hướng dưới (id menu `blocklistFragment`). */
+/** Mở tab Danh sách chặn qua thanh điều hướng dưới (Compose testTag `blocklistFragment`). */
 internal fun MacrobenchmarkScope.openBlocklist() {
-    device.findObject(By.res(packageName, "blocklistFragment"))?.click() ?: return
+    device.findObject(By.res("blocklistFragment"))?.click() ?: return
     device.waitForIdle()
 }

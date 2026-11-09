@@ -1,5 +1,8 @@
 package com.spamguard.feature.blocklist
 
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,52 +33,86 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.spamguard.core.domain.model.MatchType
 import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.blocklist.model.BlockRuleUiModel
+import com.spamguard.feature.blocklist.screening.CallScreeningRole
 import kotlinx.coroutines.launch
 
-/** Nối [BlocklistViewModel] với [BlocklistScreen]; dialog do Fragment mở qua [onAddClick] và [onDeleteClick]. */
+/**
+ * Nối [BlocklistViewModel] với [BlocklistScreen]. Vai trò sàng lọc cuộc gọi cần Android API
+ * (RoleManager, Activity Result) nên Route xử lý; mọi trạng thái khác nằm trong ViewModel.
+ */
 @Composable
 internal fun BlocklistRoute(
-    viewModel: BlocklistViewModel,
-    onAddClick: () -> Unit,
-    onDeleteClick: (BlockRuleUiModel) -> Unit,
-    onEnableScreeningClick: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: BlocklistViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Kết quả được đọc lại khi màn hình resume, ngay sau khi hộp thoại vai trò đóng.
+    val screeningRoleLauncher = rememberLauncherForActivityResult(StartActivityForResult()) {}
+    // Người dùng có thể bật/tắt vai trò trong Cài đặt bất cứ lúc nào.
+    LifecycleResumeEffect(Unit) {
+        viewModel.onScreeningStatusChecked(CallScreeningRole.status(context))
+        onPauseOrDispose {}
+    }
+
     BlocklistScreen(
         uiState = uiState,
-        onAddClick = onAddClick,
-        onDeleteClick = onDeleteClick,
-        onEnableScreeningClick = onEnableScreeningClick,
+        onAddClick = viewModel::onAddClick,
+        onAddRule = viewModel::onAddRule,
+        onAddDismiss = viewModel::onAddDialogDismissed,
+        onDeleteClick = { rule -> viewModel.onDeleteClick(rule.id) },
+        onDeleteConfirm = viewModel::onDeleteConfirmed,
+        onDeleteDismiss = viewModel::onDeleteDismissed,
+        onEnableScreeningClick = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                screeningRoleLauncher.launch(CallScreeningRole.requestIntent(context))
+            }
+        },
         onUserMessageShown = viewModel::onUserMessageShown,
         modifier = modifier,
     )
 }
 
-/** Chỉ hiển thị [uiState]; mọi quyết định nằm ở ViewModel và [BlockRuleUiMapper]. */
+/** Chỉ hiển thị [uiState], kể cả hộp thoại; mọi quyết định nằm ở ViewModel và [BlockRuleUiMapper]. */
 @Composable
 internal fun BlocklistScreen(
     uiState: BlocklistUiState,
     onAddClick: () -> Unit,
+    onAddRule: (pattern: String, matchType: MatchType) -> Unit,
+    onAddDismiss: () -> Unit,
     onDeleteClick: (BlockRuleUiModel) -> Unit,
+    onDeleteConfirm: () -> Unit,
+    onDeleteDismiss: () -> Unit,
     onEnableScreeningClick: () -> Unit,
     onUserMessageShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (uiState.isAddDialogVisible) {
+        AddBlockRuleDialog(onConfirm = onAddRule, onDismiss = onAddDismiss)
+    }
+    uiState.pendingDeletion?.let { rule ->
+        ConfirmDeleteRuleDialog(pattern = rule.pattern, onConfirm = onDeleteConfirm, onDismiss = onDeleteDismiss)
+    }
+
     val snackbarHostState = remember { SnackbarHostState() }
     UserMessageEffect(uiState.userMessageRes, snackbarHostState, onUserMessageShown)
 
     Scaffold(
         modifier = modifier,
-        // Toolbar và thanh điều hướng dưới của Activity đã xử lý inset.
+        // Thanh trên và thanh điều hướng dưới của app đã xử lý inset.
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
@@ -170,11 +207,11 @@ private fun UserMessageEffect(
     snackbarHostState: SnackbarHostState,
     onUserMessageShown: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     LaunchedEffect(messageRes) {
         if (messageRes == null) return@LaunchedEffect
-        val message = context.getString(messageRes)
+        val message = resources.getString(messageRes)
         onUserMessageShown()
         snackbarHostState.currentSnackbarData?.dismiss()
         // Scope riêng: effect này bị hủy ngay khi messageRes về null.
@@ -251,7 +288,11 @@ private fun BlocklistScreenPreview(uiState: BlocklistUiState) {
         BlocklistScreen(
             uiState = uiState,
             onAddClick = {},
+            onAddRule = { _, _ -> },
+            onAddDismiss = {},
             onDeleteClick = {},
+            onDeleteConfirm = {},
+            onDeleteDismiss = {},
             onEnableScreeningClick = {},
             onUserMessageShown = {},
         )
@@ -282,3 +323,9 @@ private fun EmptyPreview() = BlocklistScreenPreview(BlocklistUiState(isLoading =
 @Preview(showBackground = true)
 @Composable
 private fun LoadingPreview() = BlocklistScreenPreview(BlocklistUiState())
+
+@Preview(showBackground = true)
+@Composable
+private fun DeleteDialogPreview() = BlocklistScreenPreview(
+    BlocklistUiState(isLoading = false, rules = previewRules, pendingDeletion = previewRules.first()),
+)

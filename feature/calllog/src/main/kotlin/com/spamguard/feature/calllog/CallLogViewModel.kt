@@ -30,10 +30,17 @@ class CallLogViewModel @Inject constructor(
     private val listState = MutableStateFlow<CallLogUiState>(CallLogUiState.PermissionRequired)
     private val userMessage = MutableStateFlow<Int?>(null)
 
+    /** Số đang chờ người dùng xác nhận chặn (nhấn giữ một cuộc gọi); nằm ở đây để còn sau khi xoay màn hình. */
+    private val pendingBlockNumber = MutableStateFlow<String?>(null)
+
     // Eagerly: trạng thái luôn cập nhật kể cả khi chưa có collector, như khi còn là MutableStateFlow.
     val uiState: StateFlow<CallLogUiState> =
-        combine(listState, userMessage) { state, messageRes ->
-            if (state is CallLogUiState.Content) state.copy(userMessageRes = messageRes) else state
+        combine(listState, userMessage, pendingBlockNumber) { state, messageRes, blockNumber ->
+            if (state is CallLogUiState.Content) {
+                state.copy(userMessageRes = messageRes, pendingBlockNumber = blockNumber)
+            } else {
+                state
+            }
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
@@ -82,12 +89,23 @@ class CallLogViewModel @Inject constructor(
         loadCalls(showLoading = false)
     }
 
-    /**
-     * Người dùng đã xác nhận chặn [number] trong hộp thoại (nhấn giữ một cuộc gọi).
-     * Chuẩn hóa và kiểm tra trùng nằm trong [AddBlockRuleUseCase]; số ẩn (rỗng) bị bỏ qua.
-     */
-    fun onBlockConfirmed(number: String) {
+    /** Nhấn giữ một cuộc gọi: hỏi lại trước khi chặn [number]. Số ẩn (rỗng) bị bỏ qua. */
+    fun onCallLongClick(number: String) {
         if (number.isBlank()) return
+        pendingBlockNumber.value = number
+    }
+
+    fun onBlockDismissed() {
+        pendingBlockNumber.value = null
+    }
+
+    /**
+     * Người dùng đã xác nhận trong hộp thoại chặn; số lấy từ chính ViewModel, không từ UI.
+     * Chuẩn hóa và kiểm tra trùng nằm trong [AddBlockRuleUseCase].
+     */
+    fun onBlockConfirmed() {
+        val number = pendingBlockNumber.value ?: return
+        pendingBlockNumber.value = null
         viewModelScope.launch {
             userMessage.value = when (addBlockRule(number, MatchType.EXACT)) {
                 is AddBlockRuleResult.Added -> R.string.call_log_detail_message_blocked

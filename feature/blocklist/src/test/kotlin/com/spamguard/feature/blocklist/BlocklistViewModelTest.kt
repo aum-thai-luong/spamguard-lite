@@ -92,7 +92,8 @@ class BlocklistViewModelTest {
         collectUiState()
         val ruleId = repository.addRule("0900", MatchType.PREFIX)
 
-        viewModel.onDeleteRule(ruleId)
+        viewModel.onDeleteClick(ruleId)
+        viewModel.onDeleteConfirmed()
 
         assertTrue(viewModel.uiState.value.rules.isEmpty())
         assertEquals(R.string.blocklist_message_deleted, viewModel.uiState.value.userMessageRes)
@@ -178,7 +179,8 @@ class BlocklistViewModelTest {
         collectUiState()
         repository.addRule("0900", MatchType.PREFIX)
 
-        viewModel.onDeleteRule(ruleId = 999)
+        viewModel.onDeleteClick(999)
+        viewModel.onDeleteConfirmed()
 
         assertEquals(listOf("0900"), viewModel.uiState.value.rules.map { it.pattern })
         assertEquals(R.string.blocklist_message_deleted, viewModel.uiState.value.userMessageRes)
@@ -193,6 +195,58 @@ class BlocklistViewModelTest {
 
         assertEquals(listOf("0900"), viewModel.uiState.value.rules.map { it.pattern })
         assertNull(viewModel.uiState.value.userMessageRes)
+    }
+
+    @Test
+    fun `delete dialog keeps the clicked rule until confirmed`() = runTest {
+        collectUiState()
+        val keptId = repository.addRule("0900", MatchType.PREFIX)
+        val deletedId = repository.addRule("0987654321", MatchType.EXACT)
+
+        viewModel.onDeleteClick(deletedId)
+
+        assertEquals(deletedId, viewModel.uiState.value.pendingDeletion?.id)
+
+        viewModel.onDeleteConfirmed()
+
+        assertNull(viewModel.uiState.value.pendingDeletion)
+        assertEquals(listOf(keptId), viewModel.uiState.value.rules.map { it.id })
+    }
+
+    @Test
+    fun `dismissing the delete dialog keeps the rule`() = runTest {
+        collectUiState()
+        val ruleId = repository.addRule("0900", MatchType.PREFIX)
+        viewModel.onDeleteClick(ruleId)
+
+        viewModel.onDeleteDismissed()
+        viewModel.onDeleteConfirmed()
+
+        assertNull(viewModel.uiState.value.pendingDeletion)
+        assertEquals(listOf(ruleId), viewModel.uiState.value.rules.map { it.id })
+        assertNull(viewModel.uiState.value.userMessageRes)
+    }
+
+    @Test
+    fun `delete dialog closes when the rule is removed elsewhere`() = runTest {
+        collectUiState()
+        val ruleId = repository.addRule("0900", MatchType.PREFIX)
+        viewModel.onDeleteClick(ruleId)
+
+        repository.removeRule(ruleId)
+
+        assertNull(viewModel.uiState.value.pendingDeletion)
+    }
+
+    @Test
+    fun `adding a rule closes the add dialog`() = runTest {
+        collectUiState()
+        viewModel.onAddClick()
+        assertTrue(viewModel.uiState.value.isAddDialogVisible)
+
+        viewModel.onAddRule("0900", MatchType.PREFIX)
+
+        assertFalse(viewModel.uiState.value.isAddDialogVisible)
     }
 
     /** `uiState` dùng WhileSubscribed nên cần một subscriber để upstream chạy. */

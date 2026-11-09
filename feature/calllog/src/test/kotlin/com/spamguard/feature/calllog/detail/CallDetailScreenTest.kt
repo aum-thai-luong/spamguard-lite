@@ -7,6 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -39,6 +41,7 @@ class CallDetailScreenTest {
     private val unblockedRules = mutableListOf<BlockingRuleUi>()
     private var retryClicks = 0
     private var shownCount = 0
+    private var unblockConfirmations = 0
 
     @Before
     fun setUp() {
@@ -50,6 +53,8 @@ class CallDetailScreenTest {
                     onCopyClick = { copiedNumbers += it },
                     onBlockClick = { blockClicks++ },
                     onUnblockClick = { unblockedRules += it },
+                    onUnblockConfirm = { unblockConfirmations++ },
+                    onUnblockDismiss = {},
                     onRetry = { retryClicks++ },
                     // Giống ViewModel: báo đã hiện thì xóa thông báo khỏi state.
                     onUserMessageShown = {
@@ -115,6 +120,25 @@ class CallDetailScreenTest {
         composeRule.onNodeWithText(text(R.string.call_log_action_retry)).performClick()
 
         assertEquals(1, retryClicks)
+    }
+
+    @Test
+    fun `pending unblock of a prefix rule warns that every matching number is unblocked`() {
+        val rule = BlockingRuleUi(
+            ruleId = 3,
+            pattern = "0900",
+            isPrefix = true,
+            labelRes = R.string.call_log_detail_blocked_by_prefix,
+        )
+        uiState = CallDetailUiState.Content(aDetail(blockingRule = rule), pendingUnblock = rule)
+
+        composeRule.onNodeWithText(context.getString(R.string.call_log_detail_unblock_message_prefix, "0900"))
+            .assertIsDisplayed()
+        // Hộp thoại nằm trong cửa sổ riêng, phía trên nút "Bỏ chặn" của màn hình.
+        composeRule.onNodeWithText(text(R.string.call_log_detail_unblock_title)).assertIsDisplayed()
+        composeRule.onAllNodesWithText(text(R.string.call_log_detail_action_unblock)).onLast().performClick()
+
+        assertEquals(1, unblockConfirmations)
     }
 
     @Test

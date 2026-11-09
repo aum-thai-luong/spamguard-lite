@@ -1,6 +1,15 @@
 package com.spamguard.feature.calllog.detail
 
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipDescription
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
+import android.os.Build
+import android.os.PersistableBundle
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,43 +36,88 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.calllog.MessageState
 import com.spamguard.feature.calllog.R
 import com.spamguard.feature.calllog.UserMessageEffect
+import com.spamguard.feature.calllog.hasCallLogPermission
 
 /**
- * Nối [CallDetailViewModel] với [CallDetailScreen]. Gọi lại, sao chép và hộp thoại bỏ chặn
- * cần Android API nên do Fragment xử lý qua các callback.
+ * Nối [CallDetailViewModel] với [CallDetailScreen]. Gọi lại và sao chép cần Android API nên
+ * Route xử lý; mọi trạng thái khác (kể cả hộp thoại bỏ chặn) nằm trong ViewModel.
+ *
+ * @param onPermissionLost gọi khi app mất quyền đọc nhật ký (thu hồi trong Cài đặt rồi app được
+ * khôi phục); màn Cuộc gọi tự xin lại quyền.
  */
 @Composable
 internal fun CallDetailRoute(
-    viewModel: CallDetailViewModel,
-    onCallClick: (number: String) -> Unit,
-    onCopyClick: (number: String) -> Unit,
-    onUnblockClick: (BlockingRuleUi) -> Unit,
+    callId: Long,
+    onPermissionLost: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+    // Mất quyền: không tạo ViewModel, không đọc provider.
+    if (!context.hasCallLogPermission()) {
+        LaunchedEffect(Unit) { onPermissionLost() }
+        return
+    }
+    val viewModel = hiltViewModel<CallDetailViewModel, CallDetailViewModel.Factory> { factory ->
+        factory.create(callId)
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     CallDetailScreen(
         uiState = uiState,
-        onCallClick = onCallClick,
-        onCopyClick = onCopyClick,
+        onCallClick = { number -> if (!context.openDialer(number)) viewModel.onDialerUnavailable() },
+        onCopyClick = { number -> if (context.copyNumber(number)) viewModel.onNumberCopied() },
         onBlockClick = viewModel::onBlockNumber,
-        onUnblockClick = onUnblockClick,
+        onUnblockClick = { viewModel.onUnblockClick() },
+        onUnblockConfirm = viewModel::onUnblockConfirmed,
+        onUnblockDismiss = viewModel::onUnblockDismissed,
         onRetry = viewModel::onRetry,
         onUserMessageShown = viewModel::onUserMessageShown,
         modifier = modifier,
     )
+}
+
+/**
+ * Mở trình quay số đã điền sẵn [number]; ACTION_DIAL không cần quyền CALL_PHONE.
+ * @return `false` khi máy không có app gọi điện.
+ */
+private fun Context.openDialer(number: String): Boolean = try {
+    startActivity(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null)))
+    true
+} catch (e: ActivityNotFoundException) {
+    false
+}
+
+/**
+ * Sao chép [number] vào clipboard.
+ * @return `true` khi app nên tự báo đã sao chép (Android 12 trở xuống); từ Android 13 hệ thống
+ * tự báo, báo thêm sẽ thành hai thông báo.
+ */
+private fun Context.copyNumber(number: String): Boolean {
+    val clipboard = getSystemService(ClipboardManager::class.java) ?: return false
+    val clip = ClipData.newPlainText(getString(R.string.call_log_detail_clip_label), number)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        // Số điện thoại là dữ liệu cá nhân: ẩn nội dung trong bản xem trước clipboard của hệ thống.
+        clip.description.extras = PersistableBundle().apply {
+            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+        }
+    }
+    clipboard.setPrimaryClip(clip)
+    return Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
 }
 
 /** Chỉ hiển thị [uiState]; mọi quyết định nằm ở ViewModel và [CallDetailUiMapper]. */
@@ -74,10 +128,16 @@ internal fun CallDetailScreen(
     onCopyClick: (number: String) -> Unit,
     onBlockClick: () -> Unit,
     onUnblockClick: (BlockingRuleUi) -> Unit,
+    onUnblockConfirm: () -> Unit,
+    onUnblockDismiss: () -> Unit,
     onRetry: () -> Unit,
     onUserMessageShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    (uiState as? CallDetailUiState.Content)?.pendingUnblock?.let { rule ->
+        ConfirmUnblockDialog(rule = rule, onConfirm = onUnblockConfirm, onDismiss = onUnblockDismiss)
+    }
+
     val snackbarHostState = remember { SnackbarHostState() }
     UserMessageEffect(
         messageRes = (uiState as? CallDetailUiState.Content)?.userMessageRes,
@@ -87,7 +147,7 @@ internal fun CallDetailScreen(
 
     Scaffold(
         modifier = modifier,
-        // Toolbar và thanh điều hướng dưới của Activity đã xử lý inset.
+        // Thanh trên và thanh điều hướng dưới của app đã xử lý inset.
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
@@ -301,6 +361,8 @@ private fun CallDetailScreenPreview(uiState: CallDetailUiState) {
                 onCopyClick = {},
                 onBlockClick = {},
                 onUnblockClick = {},
+                onUnblockConfirm = {},
+                onUnblockDismiss = {},
                 onRetry = {},
                 onUserMessageShown = {},
             )
@@ -337,3 +399,9 @@ private fun NotFoundPreview() = CallDetailScreenPreview(CallDetailUiState.NotFou
 @Preview(showBackground = true)
 @Composable
 private fun ErrorPreview() = CallDetailScreenPreview(CallDetailUiState.Error)
+
+@Preview(showBackground = true)
+@Composable
+private fun UnblockDialogPreview() = CallDetailScreenPreview(
+    CallDetailUiState.Content(previewBlockedDetail, pendingUnblock = previewBlockedDetail.blockingRule),
+)

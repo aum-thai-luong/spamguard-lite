@@ -203,7 +203,8 @@ class CallLogViewModelTest {
         callLogRepository.calls = listOf(aCallRecord(id = 1, number = "+84 987-654-321"))
         viewModel.onPermissionResult(granted = true)
 
-        viewModel.onBlockConfirmed("+84 987-654-321")
+        viewModel.onCallLongClick("+84 987-654-321")
+        viewModel.onBlockConfirmed()
 
         // AddBlockRuleUseCase lưu pattern ở dạng đã chuẩn hóa.
         val rule = blockRuleRepository.observeRules().first().single()
@@ -222,7 +223,8 @@ class CallLogViewModelTest {
         callLogRepository.calls = listOf(aCallRecord(number = "0912345678"))
         viewModel.onPermissionResult(granted = true)
 
-        viewModel.onBlockConfirmed("0987654321")
+        viewModel.onCallLongClick("0987654321")
+        viewModel.onBlockConfirmed()
 
         assertEquals(1, blockRuleRepository.observeRules().first().size)
         val state = viewModel.uiState.value as CallLogUiState.Content
@@ -234,7 +236,8 @@ class CallLogViewModelTest {
         callLogRepository.calls = listOf(aCallRecord(number = "123"))
         viewModel.onPermissionResult(granted = true)
 
-        viewModel.onBlockConfirmed("123")
+        viewModel.onCallLongClick("123")
+        viewModel.onBlockConfirmed()
 
         assertTrue(blockRuleRepository.observeRules().first().isEmpty())
         val state = viewModel.uiState.value as CallLogUiState.Content
@@ -246,7 +249,8 @@ class CallLogViewModelTest {
         callLogRepository.calls = listOf(aCallRecord(number = ""))
         viewModel.onPermissionResult(granted = true)
 
-        viewModel.onBlockConfirmed("")
+        viewModel.onCallLongClick("")
+        viewModel.onBlockConfirmed()
 
         assertTrue(blockRuleRepository.observeRules().first().isEmpty())
         assertNull((viewModel.uiState.value as CallLogUiState.Content).userMessageRes)
@@ -256,7 +260,8 @@ class CallLogViewModelTest {
     fun `shown message is cleared`() {
         callLogRepository.calls = listOf(aCallRecord())
         viewModel.onPermissionResult(granted = true)
-        viewModel.onBlockConfirmed("0987654321")
+        viewModel.onCallLongClick("0987654321")
+        viewModel.onBlockConfirmed()
 
         viewModel.onUserMessageShown()
 
@@ -267,7 +272,8 @@ class CallLogViewModelTest {
     fun `message survives a refresh of the call list`() {
         callLogRepository.calls = listOf(aCallRecord(id = 1))
         viewModel.onPermissionResult(granted = true)
-        viewModel.onBlockConfirmed("0987654321")
+        viewModel.onCallLongClick("0987654321")
+        viewModel.onBlockConfirmed()
         callLogRepository.calls = listOf(aCallRecord(id = 2), aCallRecord(id = 1))
 
         viewModel.onRefresh()

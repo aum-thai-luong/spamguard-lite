@@ -8,9 +8,12 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.spamguard.core.domain.model.MatchType
 import com.spamguard.core.ui.theme.SpamGuardTheme
+import com.spamguard.feature.blocklist.model.BlockRuleUiModel
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -30,6 +33,8 @@ class BlocklistScreenTest {
     private var uiState by mutableStateOf(BlocklistUiState(isLoading = false))
     private var shownCount = 0
     private var enableScreeningClicks = 0
+    private val addedRules = mutableListOf<Pair<String, MatchType>>()
+    private var deleteConfirmations = 0
 
     @Before
     fun setUp() {
@@ -38,7 +43,11 @@ class BlocklistScreenTest {
                 BlocklistScreen(
                     uiState = uiState,
                     onAddClick = {},
+                    onAddRule = { pattern, matchType -> addedRules += pattern to matchType },
+                    onAddDismiss = {},
                     onDeleteClick = {},
+                    onDeleteConfirm = { deleteConfirmations++ },
+                    onDeleteDismiss = {},
                     onEnableScreeningClick = { enableScreeningClicks++ },
                     // Giống ViewModel: báo đã hiện thì xóa thông báo khỏi state.
                     onUserMessageShown = {
@@ -115,5 +124,34 @@ class BlocklistScreenTest {
         composeRule.waitForIdle()
     }
 
-    private fun text(resId: Int): String = ApplicationProvider.getApplicationContext<Context>().getString(resId)
+    @Test
+    fun `add dialog returns the typed pattern and chosen match type`() {
+        uiState = uiState.copy(isAddDialogVisible = true)
+
+        composeRule.onNodeWithText(text(R.string.blocklist_input_hint)).performTextInput("0900")
+        composeRule.onNodeWithText(text(R.string.blocklist_match_exact_option)).performClick()
+        composeRule.onNodeWithText(text(R.string.blocklist_action_add)).performClick()
+
+        assertEquals(listOf("0900" to MatchType.EXACT), addedRules)
+    }
+
+    @Test
+    fun `delete dialog names the rule and reports confirmation`() {
+        val rule = BlockRuleUiModel(
+            id = 42,
+            pattern = "0900",
+            matchTypeLabelRes = R.string.blocklist_match_prefix,
+            createdText = "15/01/2026",
+        )
+        uiState = uiState.copy(rules = listOf(rule), pendingDeletion = rule)
+
+        composeRule.onNodeWithText(context.getString(R.string.blocklist_delete_message, "0900")).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.blocklist_action_delete)).performClick()
+
+        assertEquals(1, deleteConfirmations)
+    }
+
+    private val context: Context get() = ApplicationProvider.getApplicationContext()
+
+    private fun text(resId: Int): String = context.getString(resId)
 }

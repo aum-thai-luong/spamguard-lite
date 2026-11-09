@@ -25,5 +25,7 @@ sealed interface CallLogUiState {
         val isRefreshing: Boolean = false,
         /** Thông báo một lần (snackbar); UI gọi `onUserMessageShown()` sau khi hiển thị. */
         @StringRes val userMessageRes: Int? = null,
+        /** Số đang chờ người dùng xác nhận chặn; `null` khi không có hộp thoại chặn. */
+        val pendingBlockNumber: String? = null,
     ) : CallLogUiState
 }

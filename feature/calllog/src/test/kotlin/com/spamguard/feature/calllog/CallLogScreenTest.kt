@@ -42,6 +42,7 @@ class CallLogScreenTest {
     private var clickedCallId: Long? = null
     private var longClickedNumber: String? = null
     private var userMessageShownCount = 0
+    private var blockConfirmations = 0
 
     @Before
     fun setUp() {
@@ -55,6 +56,8 @@ class CallLogScreenTest {
                     onRefresh = {},
                     onCallClick = { clickedCallId = it },
                     onCallLongClick = { longClickedNumber = it },
+                    onBlockConfirm = { blockConfirmations++ },
+                    onBlockDismiss = {},
                     onUserMessageShown = { userMessageShownCount++ },
                 )
             }
@@ -172,6 +175,20 @@ class CallLogScreenTest {
 
         assertNull(longClickedNumber)
         assertNull(clickedCallId)
+    }
+
+    @Test
+    fun `pending block shows a dialog naming the number and reports confirmation`() {
+        uiState = CallLogUiState.Content(
+            calls = listOf(aCallUiModel(id = 1, title = "Chị Lan", subtitle = "0919009001", number = "0919009001")),
+            blockedCount = 0,
+            pendingBlockNumber = "0919009001",
+        )
+
+        composeRule.onNodeWithText(context.getString(R.string.call_log_block_message, "0919009001")).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.call_log_action_block)).performClick()
+
+        assertEquals(1, blockConfirmations)
     }
 
     @Test

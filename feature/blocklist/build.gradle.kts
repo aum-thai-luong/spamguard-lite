@@ -18,8 +18,6 @@ android {
 
     buildFeatures {
         compose = true
-        // Dialog thêm quy tắc vẫn dùng layout XML.
-        viewBinding = true
     }
 
     compileOptions {
@@ -28,7 +26,7 @@ android {
     }
 
     testOptions {
-        // Robolectric cần resource thật để dựng dialog Material.
+        // Robolectric cần resource thật (chuỗi, drawable) để dựng màn hình Compose trong test.
         unitTests.isIncludeAndroidResources = true
     }
 }
@@ -42,14 +40,14 @@ kotlin {
 dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
+    api(project(":feature:blocklist-navigation"))
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -64,13 +62,11 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.ext.junit)
-    testImplementation(libs.androidx.fragment.testing)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     // Activity rỗng cho test: chỉ cần ở test JVM (Robolectric). Khai báo `debugImplementation`
     // sẽ gộp Activity exported vào APK debug của app.
     testImplementation(libs.androidx.compose.ui.test.manifest)
-    testImplementation(libs.androidx.fragment.testing.manifest)
 }
 
 // Robolectric mặc định tự tải jar android-all từ Maven Central lúc chạy test, bỏ qua

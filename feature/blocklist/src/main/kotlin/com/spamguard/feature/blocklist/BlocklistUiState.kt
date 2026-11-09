@@ -9,6 +9,10 @@ data class BlocklistUiState(
     val screeningStatus: ScreeningStatus = ScreeningStatus.Unsupported,
     /** Thông báo một lần (snackbar); UI gọi `onUserMessageShown()` sau khi hiển thị. */
     @StringRes val userMessageRes: Int? = null,
+    /** Hộp thoại thêm quy tắc đang mở. */
+    val isAddDialogVisible: Boolean = false,
+    /** Quy tắc đang chờ người dùng xác nhận xóa; `null` khi không có hộp thoại xóa. */
+    val pendingDeletion: BlockRuleUiModel? = null,
 ) {
     val isEmpty: Boolean get() = !isLoading && rules.isEmpty()
 }

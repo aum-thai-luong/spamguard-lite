@@ -1,6 +1,5 @@
 package com.spamguard.feature.calllog.detail
 
-import androidx.lifecycle.SavedStateHandle
 import com.spamguard.core.domain.error.CallLogUnavailableException
 import com.spamguard.core.domain.model.MatchType
 import com.spamguard.core.domain.phone.PhoneNumberNormalizer
@@ -112,10 +111,13 @@ class CallDetailViewModelTest {
         collectUiState(viewModel)
         assertEquals(ruleId, viewModel.content().detail.blockingRule?.ruleId)
 
-        viewModel.onUnblockConfirmed(ruleId)
+        viewModel.onUnblockClick()
+        assertEquals(ruleId, viewModel.content().pendingUnblock?.ruleId)
+        viewModel.onUnblockConfirmed()
 
         val state = viewModel.content()
         assertNull(state.detail.blockingRule)
+        assertNull(state.pendingUnblock)
         assertEquals(R.string.call_log_detail_message_unblocked, state.userMessageRes)
     }
 
@@ -135,7 +137,7 @@ class CallDetailViewModelTest {
     private fun createViewModel(callId: Long): CallDetailViewModel {
         val normalizer = PhoneNumberNormalizer()
         return CallDetailViewModel(
-            savedStateHandle = SavedStateHandle(mapOf(CALL_ID_ARG to callId)),
+            callId = callId,
             getCallDetail = GetCallDetailUseCase(callLogRepository, blockRuleRepository, SpamClassifier(normalizer)),
             addBlockRule = AddBlockRuleUseCase(blockRuleRepository, normalizer),
             removeBlockRule = RemoveBlockRuleUseCase(blockRuleRepository),

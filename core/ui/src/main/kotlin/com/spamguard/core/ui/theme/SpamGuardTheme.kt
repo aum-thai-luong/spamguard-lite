@@ -16,7 +16,7 @@ import androidx.compose.ui.res.colorResource
 import com.spamguard.core.ui.R
 
 /**
- * Material 3 cho mọi màn hình Compose, khớp với `Theme.SpamGuard` (XML):
+ * Material 3 cho mọi màn hình:
  * Dynamic Color trên Android 12+, màu thương hiệu `brand_*` trên máy cũ hơn.
  */
 @Composable

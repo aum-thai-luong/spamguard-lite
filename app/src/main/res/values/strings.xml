@@ -4,4 +4,5 @@
     <string name="destination_call_log">Cuộc gọi</string>
     <string name="destination_blocklist">Danh sách chặn</string>
     <string name="destination_call_detail">Chi tiết cuộc gọi</string>
+    <string name="navigate_up">Quay lại</string>
 </resources>

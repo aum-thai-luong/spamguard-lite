@@ -1,6 +1,9 @@
 package com.spamguard.feature.calllog
 
 import android.content.res.Configuration
+import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -28,51 +31,78 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.spamguard.core.ui.theme.SpamGuardTheme
 import com.spamguard.feature.calllog.model.CallUiModel
 
 /**
- * Nối [CallLogViewModel] với [CallLogScreen]; quyền hệ thống do Fragment xin hộ qua
- * [onRequestPermission], hoặc mở Cài đặt qua [onOpenSettings].
+ * Nối [CallLogViewModel] với [CallLogScreen]. Quyền hệ thống cần Android API (Activity Result,
+ * Cài đặt) nên Route xử lý; mọi trạng thái khác nằm trong ViewModel.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun CallLogRoute(
-    viewModel: CallLogViewModel,
-    onRequestPermission: () -> Unit,
-    onOpenSettings: () -> Unit,
     onCallClick: (callId: Long) -> Unit,
-    onCallLongClick: (number: String) -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: CallLogViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
+    val activity = LocalActivity.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val permissionLauncher = rememberLauncherForActivityResult(RequestPermission()) { granted ->
+        // Bị từ chối mà hệ thống không đòi giải thích nữa: lần xin sau sẽ bị từ chối ngay, không hiện hộp thoại.
+        val canAskAgain = granted || activity == null ||
+            ActivityCompat.shouldShowRequestPermissionRationale(activity, CALL_LOG_PERMISSION)
+        viewModel.onPermissionResult(granted, canAskAgain)
+    }
+
+    // Chỉ tự hỏi quyền lần đầu mở màn hình; khi khôi phục, người dùng tự bấm "Cấp quyền".
+    var permissionAsked by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!permissionAsked && !context.hasCallLogPermission()) {
+            permissionAsked = true
+            permissionLauncher.launch(CALL_LOG_PERMISSION)
+        }
+    }
+
+    // Bắt kịp quyền vừa bật trong Cài đặt, hoặc đọc lại sau khi hệ thống dừng process.
+    LifecycleResumeEffect(Unit) {
+        if (context.hasCallLogPermission()) viewModel.onPermissionAvailable()
+        onPauseOrDispose {}
+    }
+
     CallLogScreen(
         uiState = uiState,
-        onRequestPermission = onRequestPermission,
-        onOpenSettings = onOpenSettings,
+        onRequestPermission = { permissionLauncher.launch(CALL_LOG_PERMISSION) },
+        onOpenSettings = context::openAppSettings,
         onRetry = viewModel::onRetry,
         onRefresh = viewModel::onRefresh,
         onCallClick = onCallClick,
-        onCallLongClick = onCallLongClick,
+        onCallLongClick = viewModel::onCallLongClick,
+        onBlockConfirm = viewModel::onBlockConfirmed,
+        onBlockDismiss = viewModel::onBlockDismissed,
         onUserMessageShown = viewModel::onUserMessageShown,
-        // Lộ testTag thành resource-id để UiAutomator (Baseline Profile, macrobenchmark) tìm được.
-        modifier = modifier.semantics { testTagsAsResourceId = true },
+        modifier = modifier,
     )
 }
 
@@ -86,9 +116,15 @@ internal fun CallLogScreen(
     onRefresh: () -> Unit,
     onCallClick: (callId: Long) -> Unit,
     onCallLongClick: (number: String) -> Unit,
+    onBlockConfirm: () -> Unit,
+    onBlockDismiss: () -> Unit,
     onUserMessageShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    (uiState as? CallLogUiState.Content)?.pendingBlockNumber?.let { number ->
+        ConfirmBlockNumberDialog(number = number, onConfirm = onBlockConfirm, onDismiss = onBlockDismiss)
+    }
+
     val snackbarHostState = remember { SnackbarHostState() }
     UserMessageEffect(
         messageRes = (uiState as? CallLogUiState.Content)?.userMessageRes,
@@ -98,7 +134,7 @@ internal fun CallLogScreen(
 
     Scaffold(
         modifier = modifier,
-        // Toolbar và thanh điều hướng dưới của Activity đã xử lý inset.
+        // Thanh trên và thanh điều hướng dưới của app đã xử lý inset.
         contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
@@ -218,7 +254,7 @@ private fun CallList(
     }
 }
 
-/** Module :baselineprofile tìm danh sách bằng tag này (xem `testTagsAsResourceId` ở [CallLogRoute]). */
+/** Module :baselineprofile tìm danh sách bằng tag này (`testTagsAsResourceId` bật ở gốc UI của :app). */
 internal const val CALL_LOG_LIST_TAG = "call_log_list"
 
 private const val CONTENT_TYPE_SUMMARY = "summary"
@@ -360,6 +396,8 @@ private fun CallLogScreenPreview(uiState: CallLogUiState) {
                 onRefresh = {},
                 onCallClick = {},
                 onCallLongClick = {},
+                onBlockConfirm = {},
+                onBlockDismiss = {},
                 onUserMessageShown = {},
             )
         }
@@ -396,3 +434,9 @@ private fun PermissionDeniedPermanentlyPreview() =
 @Preview(showBackground = true)
 @Composable
 private fun LoadingPreview() = CallLogScreenPreview(CallLogUiState.Loading)
+
+@Preview(showBackground = true)
+@Composable
+private fun BlockDialogPreview() = CallLogScreenPreview(
+    CallLogUiState.Content(calls = previewCalls, blockedCount = 1, pendingBlockNumber = "0987654321"),
+)
